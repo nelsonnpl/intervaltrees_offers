@@ -1,0 +1,5 @@
+.agents/
+.claude/
+package-lock.json
+styles.css
+xcheck.py
