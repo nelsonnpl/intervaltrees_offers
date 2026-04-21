@@ -3,39 +3,4313 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Caso de Estudio: Interval Trees 2D para Conciliación de Ofertas Comerciales</title>
+  <title>Interval Trees 2D — Nelson Ponce Luna</title>
 
-  <!-- Deps -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Paper styles -->
-  <link rel="stylesheet" href="styles.css"/>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+
+  <style>
+/* ── Tokens ──────────────────────────────────────────────── */
+:root {
+  --bg:      oklch(98.3% 0.006 85);
+  --bg-2:    oklch(95.8% 0.009 85);
+  --bg-card: #ffffff;
+  --ink:     oklch(14%   0.011 240);
+  --ink-2:   oklch(32%   0.008 240);
+  --ink-3:   oklch(52%   0.006 240);
+  --ink-4:   oklch(72%   0.005 240);
+  --rule:    oklch(88%   0.006 85);
+  --rule-2:  oklch(92%   0.006 85);
+  --accent:  oklch(54%   0.18  48);   /* burnt amber */
+  --accent-2:oklch(40%   0.14  48);
+  --green:   oklch(45%   0.13  145);
+  --blue:    oklch(45%   0.14  250);
+  --red:     oklch(50%   0.19  25);
+
+  --col-text:  720px;
+  --col-wide:  820px;
+  --col-full:  1120px;
+
+  --f-disp: 'Instrument Serif', serif;
+  --f-body: 'Newsreader', Georgia, serif;
+  --f-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 1.125rem;
+  line-height: 1.72;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "onum";
+}
+
+/* ── Progress bar ────────────────────────────────────────── */
+.progress {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 2px; z-index: 100;
+  background: transparent;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+/* ── Top meta bar ────────────────────────────────────────── */
+.topbar {
+  max-width: var(--col-full);
+  margin: 0 auto;
+  padding: 1.5rem 2rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--f-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.topbar .dot {
+  display: inline-block; width: 6px; height: 6px;
+  background: var(--accent); border-radius: 50%;
+  margin-right: 0.5rem; vertical-align: middle;
+}
+
+/* ── Main container ──────────────────────────────────────── */
+.paper {
+  max-width: var(--col-text);
+  margin: 0 auto;
+  padding: 6rem 2rem 8rem;
+}
+
+/* ── Hero ───────────────────────────────────────────────── */
+.hero { margin-bottom: 5rem; }
+.hero-kicker {
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.hero-kicker::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+.hero-title {
+  font-family: var(--f-disp);
+  font-size: clamp(3rem, 6.5vw, 5.5rem);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  margin-bottom: 1.2rem;
+  text-wrap: balance;
+}
+.hero-title em {
+  font-style: italic;
+  color: var(--accent);
+  font-weight: 400;
+}
+.hero-sub {
+  font-family: var(--f-body);
+  font-size: 1.3rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+  font-style: italic;
+  max-width: 560px;
+  margin-bottom: 3rem;
+  text-wrap: pretty;
+}
+.hero-meta {
+  display: flex;
+  gap: 3rem;
+  padding-top: 1.3rem;
+  border-top: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+.hero-meta-item { }
+.hero-meta-label {
+  font-family: var(--f-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 0.3rem;
+}
+.hero-meta-value {
+  font-size: 0.95rem;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ── Abstract ───────────────────────────────────────────── */
+.abstract {
+  margin-bottom: 6rem;
+  padding: 2.5rem 0;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--rule);
+}
+.abstract-label {
+  font-family: var(--f-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 1.3rem;
+}
+.abstract-body {
+  font-size: 1.18rem;
+  line-height: 1.65;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+.abstract-body em { color: var(--ink-2); }
+.abstract-kw {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 2rem;
+}
+.abstract-kw span {
+  font-family: var(--f-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  padding: 0.22rem 0.6rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--bg-card);
+}
+
+/* Code box replacement for console -> styled text box */
+.cb-body {
+  padding: 1rem 1.1rem;
+  background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(250,250,250,0.8));
+  border: 1px solid rgba(0,0,0,0.06);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  font-family: var(--f-mono);
+  font-size: 0.92rem;
+  white-space: pre-wrap;
+  color: var(--ink-2);
+  margin-top: 0.8rem;
+}
+
+/* ── Section ────────────────────────────────────────────── */
+.sec {
+  margin-bottom: 5.5rem;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.sec.vis { opacity: 1; transform: none; }
+
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+}
+.sec-num {
+  font-family: var(--f-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  padding-top: 0.35rem;
+  flex-shrink: 0;
+}
+.sec-title {
+  font-family: var(--f-disp);
+  font-size: clamp(1.75rem, 3vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.sec-body p {
+  margin-bottom: 1.2rem;
+  text-wrap: pretty;
+}
+.sec-body ul {
+  list-style: none;
+  margin-bottom: 1.5rem;
+  padding-left: 0;
+}
+.sec-body li {
+  position: relative;
+  padding-left: 1.8rem;
+  margin-bottom: 0.8rem;
+  line-height: 1.6;
+}
+.sec-body li::before {
+  content: '';
+  position: absolute;
+  left: 0.2rem;
+  top: 0.85em;
+  width: 6px;
+  height: 1px;
+  background: var(--accent);
+}
+
+.sec-body h3 {
+  font-family: var(--f-disp);
+  font-size: 1.5rem;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.3;
+  margin: 3rem 0 1rem;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.sec-body h3::before {
+  content: attr(data-n);
+  font-family: var(--f-mono);
+  font-style: normal;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+  margin-right: 0.7rem;
+  vertical-align: 0.2em;
+}
+
+strong { font-weight: 600; color: var(--ink); }
+em { font-style: italic; }
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent); }
+
+/* ── Figure (breakout) ──────────────────────────────────── */
+.fig {
+  margin: 3rem calc(50% - min(var(--col-wide), 100vw - 4rem) / 2);
+  width: min(var(--col-wide), 100vw - 4rem);
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.fig-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 1.3rem;
+  border-bottom: 1px solid var(--rule);
+}
+.fig-n {
+  font-family: var(--f-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 500;
+}
+.fig-lbl {
+  font-family: var(--f-body);
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--ink-2);
+  text-align: right;
+}
+.fig-inner {
+  padding: 1.5rem 1.3rem 1.2rem;
+}
+.fig-cap {
+  padding: 0.85rem 1.3rem 1rem;
+  border-top: 1px solid var(--rule-2);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--ink-3);
+  font-style: italic;
+}
+.fig-cap strong { color: var(--ink-2); font-style: normal; font-weight: 600; }
+
+/* ── Pull quote ─────────────────────────────────────────── */
+.pq {
+  margin: 3.5rem 0;
+  padding-left: 0;
+  font-family: var(--f-disp);
+  font-size: clamp(1.6rem, 2.8vw, 2.1rem);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.28;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  text-wrap: balance;
+  position: relative;
+}
+.pq::before {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 1px;
+  background: var(--accent);
+  margin-bottom: 1.5rem;
+}
+
+/* ── Code ───────────────────────────────────────────────── */
+.cb {
+  margin: 2rem calc(50% - min(var(--col-wide), 100vw - 4rem) / 2);
+  width: min(var(--col-wide), 100vw - 4rem);
+  background: oklch(14% 0.008 240);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.cb-head {
+  padding: 0.75rem 1.3rem;
+  background: oklch(17% 0.009 240);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cb-lang {
+  font-family: var(--f-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: oklch(60% 0.006 240);
+}
+.cb-badge {
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  color: oklch(68% 0.14 48);
+  letter-spacing: 0.1em;
+}
+.cb-pre {
+  padding: 1.1rem 1.4rem;
+  overflow-x: auto;
+  font-family: var(--f-mono);
+  font-size: 0.75rem;
+  line-height: 1.62;
+  color: oklch(82% 0.006 85);
+}
+.cb-pre pre { margin: 0; }
+.code-kw      { color: oklch(70% 0.15 295); }
+.code-fn      { color: oklch(75% 0.13 195); }
+.code-str     { color: oklch(75% 0.13 140); }
+.code-comment { color: oklch(48% 0.006 240); font-style: italic; }
+.code-type    { color: oklch(75% 0.14 48); }
+.inline-code {
+  font-family: var(--f-mono);
+  font-size: 0.82em;
+  background: var(--bg-2);
+  padding: 0.12em 0.4em;
+  border-radius: 3px;
+  color: var(--accent-2);
+}
+
+/* ── Equation ───────────────────────────────────────────── */
+.eq-block {
+  text-align: center;
+  margin: 1.8rem 0;
+  padding: 1rem 0;
+  overflow-x: auto;
+}
+
+/* ── Table ──────────────────────────────────────────────── */
+.ptable-wrap {
+  margin: 2.5rem calc(50% - min(var(--col-wide), 100vw - 4rem) / 2);
+  width: min(var(--col-wide), 100vw - 4rem);
+  overflow-x: auto;
+}
+.ptable { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+.ptable th {
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  text-align: left;
+  padding: 0.7rem 0.95rem;
+  border-bottom: 1px solid var(--ink);
+  white-space: nowrap;
+}
+.ptable td {
+  padding: 0.7rem 0.95rem;
+  border-bottom: 1px solid var(--rule-2);
+  line-height: 1.45;
+  vertical-align: middle;
+}
+.ptable tbody tr:hover td { background: var(--bg-2); }
+.ptable tbody tr.tr-hi td {
+  background: oklch(97% 0.025 48 / 0.6);
+  font-weight: 500;
+}
+.ptable tbody tr.tr-hi:hover td { background: oklch(96% 0.035 48 / 0.7); }
+.td-n { color: var(--ink-3); }
+.td-g { color: var(--green); font-weight: 600; }
+
+/* ── Proof callout ──────────────────────────────────────── */
+.proof {
+  margin: 2rem calc(50% - min(var(--col-wide), 100vw - 4rem) / 2);
+  width: min(var(--col-wide), 100vw - 4rem);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--ink);
+  background: var(--bg-card);
+  padding: 1.1rem 1.3rem 1.2rem;
+  border-radius: 2px;
+}
+.proof-hd {
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 0.7rem;
+}
+.proof-bd {
+  font-size: 0.97rem;
+  line-height: 1.65;
+  color: var(--ink-2);
+  font-style: italic;
+}
+.proof-bd .katex { font-style: normal; }
+.qed {
+  display: inline-block;
+  margin-left: 0.3rem;
+  color: var(--ink);
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* ── Inline code ────────────────────────────────────────── */
+.inline-code {
+  font-family: var(--f-mono);
+  font-size: 0.82em;
+  padding: 0.1em 0.35em;
+  background: var(--bg-2);
+  border: 1px solid var(--rule-2);
+  border-radius: 2px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+/* ── TL;DR callout ──────────────────────────────────────── */
+.tldr {
+  margin: 2rem calc(50% - min(var(--col-wide), 100vw - 4rem) / 2);
+  width: min(var(--col-wide), 100vw - 4rem);
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 1.2rem;
+  padding: 1.1rem 1.3rem;
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--accent);
+  border-radius: 2px;
+}
+.tldr-lbl {
+  font-family: var(--f-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  align-self: start;
+  padding-top: 0.2rem;
+}
+.tldr-body { font-size: 0.97rem; line-height: 1.6; color: var(--ink-2); }
+.tldr-body ul { list-style: none; display: flex; flex-direction: column; gap: 0.28rem; }
+.tldr-body li::before {
+  content: '·'; color: var(--accent);
+  margin-right: 0.5rem; font-weight: 700;
+}
+.tldr-body code {
+  font-family: var(--f-mono); font-size: 0.82em;
+  color: var(--ink); background: var(--bg-2);
+  padding: 0.05em 0.32em; border-radius: 2px;
+}
+
+/* ── Timeline (detección) ───────────────────────────────── */
+.timeline {
+  margin: 1.6rem 0 2rem;
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 0.2rem 1.2rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+.tl-t {
+  font-family: var(--f-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  padding-top: 0.25rem;
+  border-right: 1px solid var(--rule);
+  padding-right: 0.9rem;
+  text-transform: uppercase;
+}
+.tl-d {
+  color: var(--ink-2);
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--rule-2);
+  padding-left: 0.1rem;
+}
+.timeline > div:nth-last-child(-n+2) { border-bottom: none; padding-bottom: 0; }
+.timeline strong { color: var(--ink); font-weight: 600; }
+
+/* ── Note callout (grounded anchor) ─────────────────────── */
+.note {
+  margin: 1.4rem 0;
+  padding: 0.9rem 1.1rem;
+  background: var(--bg-2);
+  border-left: 2px solid var(--ink-3);
+  border-radius: 2px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.note-label {
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 0.3rem;
+}
+
+/* ── Walk-through trace table ───────────────────────────── */
+.trace {
+  margin: 1.6rem calc(50% - min(var(--col-wide), 100vw - 4rem) / 2);
+  width: min(var(--col-wide), 100vw - 4rem);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.trace-hd {
+  padding: 0.7rem 1rem;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.trace table { width: 100%; border-collapse: collapse; font-size: 0.86rem; font-family: var(--f-mono); }
+.trace th { text-align: left; padding: 0.55rem 0.9rem;
+  font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-3); font-weight: 500;
+  border-bottom: 1px solid var(--ink);
+}
+.trace td { padding: 0.52rem 0.9rem; border-bottom: 1px solid var(--rule-2); vertical-align: middle; color: var(--ink-2); }
+.trace td.tag-hit { color: var(--green); font-weight: 600; }
+.trace td.tag-prn { color: var(--red); font-weight: 600; }
+.trace td.tag-vis { color: var(--blue); }
+.trace tbody tr:last-child td { border-bottom: none; }
+
+/* ── Results grid ───────────────────────────────────────── */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin: 2.5rem calc(50% - min(var(--col-wide), 100vw - 4rem) / 2);
+  width: min(var(--col-wide), 100vw - 4rem);
+}
+.rcard {
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  padding: 1.2rem 1.1rem;
+  border-radius: 2px;
+}
+.rcard-v {
+  font-family: var(--f-disp);
+  font-size: 2.2rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.45rem;
+}
+.rcard-v em { font-style: italic; color: var(--accent); }
+.rcard-l {
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  line-height: 1.4;
+}
+@media (max-width: 800px) {
+  .results-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── References ─────────────────────────────────────────── */
+.refs {
+  list-style: none;
+  counter-reset: ref;
+}
+.ref {
+  counter-increment: ref;
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.ref::before {
+  content: counter(ref, decimal-leading-zero);
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  color: var(--accent);
+  padding-top: 0.25rem;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+  width: 2rem;
+}
+.ref > span { min-width: 0; flex: 1; }
+
+/* ── Foot ───────────────────────────────────────────────── */
+.foot {
+  max-width: var(--col-text);
+  margin: 0 auto;
+  padding: 3rem 2rem 2rem;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--f-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ── Animations ─────────────────────────────────────────── */
+@keyframes fadeInUp { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
+.svg-fade-in { animation: fadeInUp 0.4s ease both; }
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .paper { padding: 4rem 1.5rem 5rem; }
+  .topbar { padding: 1rem 1.5rem 0; font-size: 0.6rem; }
+  .topbar .topbar-right { display: none; }
+  .hero { margin-bottom: 3rem; }
+  .hero-meta { gap: 1.5rem; }
+  .abstract { margin-bottom: 4rem; padding: 1.8rem 0; }
+  .sec { margin-bottom: 3.5rem; }
+  .fig, .cb, .ptable-wrap, .results-grid {
+    margin-left: calc(50% - 50vw + 1.5rem);
+    margin-right: calc(50% - 50vw + 1.5rem);
+    width: calc(100vw - 3rem);
+  }
+  .fig-head { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+  .fig-lbl { text-align: left; }
+  .results-grid { grid-template-columns: repeat(2, 1fr); }
+  .foot { flex-direction: column; gap: 0.4rem; padding: 2rem 1.5rem; }
+}
+  </style>
 </head>
 <body>
-
-<!-- Scroll progress bar -->
-<div id="progress-bar"></div>
-
-<!-- React mount point -->
+<div class="progress"><div class="progress-fill" id="pfill"></div></div>
 <div id="root"></div>
 
-<!-- Components — loaded in dependency order as text/babel -->
-<script type="text/babel" src="js/utils.js"></script>
-<script type="text/babel" src="js/components.js"></script>
-<script type="text/babel" src="js/fig-journey.js"></script>
-<script type="text/babel" src="js/fig1.js"></script>
-<script type="text/babel" src="js/fig2.js"></script>
-<script type="text/babel" src="js/fig3.js"></script>
-<script type="text/babel" src="js/fig-overload.js"></script>
-<script type="text/babel" src="js/fig4.js"></script>
-<script type="text/babel" src="js/fig5.js"></script>
-<script type="text/babel" src="js/fig6.js"></script>
-<script type="text/babel" src="js/app.js"></script>
+<script>// ── Shared React hooks & Math component ──────────────────────────────────────
+
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+// KaTeX inline/display
+const M = ({ t, d = false }) => {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current) {
+      katex.render(t, ref.current, {
+        throwOnError: false,
+        displayMode: d,
+      });
+    }
+  }, [t, d]);
+  return React.createElement('span', { ref });
+};
+
+// IntersectionObserver hook — triggers once when element enters viewport
+const useInView = (threshold = 0.12) => {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return [ref, visible];
+};
+
+// Interval overlap check
+const overlaps1D = (al, ah, bl, bh) => al <= bh && bl <= ah;
+</script>
+<script>// ── Fig 1 — Tres iteraciones del crosscheck (génesis del proyecto) ─────────
+// Storytelling: Polars estándar → Polars + calamine → + Interval Trees.
+// Cada iteración mejora pero solo la última cambia el régimen de complejidad.
+
+const FigJourney = () => {
+  const [ref, visible] = useInView(0.12);
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    if (!visible) return;
+    const t = setInterval(() => setActive(a => (a + 1) % 4), 2400);
+    return () => clearInterval(t);
+  }, [visible]);
+
+  const iters = [
+    {
+      v: 'v 1', date: 'Sprint 0', tag: 'PROTOTIPO',
+      stack: ['Polars', 'openpyxl'],
+      time: '~ 45 min*', ram: 'OOM > 16 GB',
+      status: 'INVIABLE', icon: '✗',
+      color: '#991b1b', soft: '#ffe3e3',
+      lesson: 'El motor no es el cuello de botella: lo es la normalización día-a-día y el producto cartesiano que genera.',
+      desc: 'Implementación inicial en Polars con lectura xlsx estándar. La discretización fecha-a-fecha durante la normalización satura la RAM antes de completar el cotejo.',
+    },
+    {
+      v: 'v 2', date: 'Q+1', tag: 'OPTIMIZACIÓN',
+      stack: ['Polars', 'calamine'],
+      time: '~ 18 min', ram: '9,8 GB',
+      status: 'AL LÍMITE', icon: '!',
+      color: '#92400e', soft: '#fff4e6',
+      lesson: 'Cambiar el lector pospone el muro pero no lo elimina. La complejidad sigue siendo cuadrática.',
+      desc: 'Sustitución de openpyxl por calamine (parser xlsx en Rust). Throughput ×3, RAM ÷2, pero la estrategia de discretización se mantiene.',
+    },
+    {
+      v: 'v 3', date: 'Q+2', tag: 'CAMBIO DE PARADIGMA',
+      stack: ['Polars + calamine', 'Interval Tree 2D'],
+      time: '< 30 seg', ram: '~ 85 MB',
+      status: 'ÓPTIMO', icon: '✓',
+      color: '#15803d', soft: '#d3f9d8',
+      lesson: 'La estructura de datos correcta gana al motor más rápido. Eliminar la dependencia de d₁·d₂ devuelve la viabilidad.',
+      desc: 'Se conserva el stack Polars + calamine y se añade un Árbol de Intervalos 2D sobre él. Cada oferta es un rectángulo en BW × TP; la indexación logarítmica reemplaza al join cartesiano.',
+    },
+  ];
+
+  const W = 720, H = 360;
+  const cardW = 200, cardH = 245;
+  const gap = (W - 3 * cardW) / 4;
+  const cardX = i => gap + i * (cardW + gap);
+  const cardY = 28;
+
+  const Card = ({ d, idx }) => {
+    const isHi = active === idx || active === 3;
+    return React.createElement('g', {
+      style: { transition: 'transform 0.5s', cursor: 'pointer' },
+      onClick: () => setActive(idx),
+    },
+      // Card background
+      React.createElement('rect', {
+        x: cardX(idx), y: cardY,
+        width: cardW, height: cardH, rx: 4,
+        fill: isHi ? d.soft : 'white',
+        stroke: isHi ? d.color : '#d8d8d0',
+        strokeWidth: isHi ? 2 : 1,
+        style: {
+          transition: 'fill 0.5s, stroke 0.5s, stroke-width 0.5s',
+          filter: isHi ? `drop-shadow(0 4px 12px ${d.color}22)` : 'none'
+        }
+      }),
+
+      // Top accent bar
+      React.createElement('rect', {
+        x: cardX(idx), y: cardY,
+        width: cardW, height: 5,
+        fill: d.color
+      }),
+
+      // Version + tag
+      React.createElement('text', {
+        x: cardX(idx) + 14, y: cardY + 26,
+        fontSize: '10', fontWeight: '900',
+        fill: d.color, letterSpacing: '0.04em',
+        fontFamily: 'JetBrains Mono, monospace'
+      }, d.v),
+      React.createElement('text', {
+        x: cardX(idx) + cardW - 14, y: cardY + 26,
+        textAnchor: 'end',
+        fontSize: '7', fontWeight: '700',
+        fill: '#8a8a82', letterSpacing: '0.14em',
+        fontFamily: 'JetBrains Mono, monospace'
+      }, d.tag),
+
+      // Date
+      React.createElement('text', {
+        x: cardX(idx) + 14, y: cardY + 42,
+        fontSize: '8', fill: '#8a8a82',
+        fontStyle: 'italic',
+        fontFamily: 'EB Garamond, serif'
+      }, d.date),
+
+      // Tech stack chips
+      ...d.stack.map((s, i) =>
+        React.createElement('g', { key: s, transform: `translate(${cardX(idx) + 14}, ${cardY + 56 + i * 20})` },
+          React.createElement('rect', {
+            x: 0, y: 0, width: cardW - 28, height: 16, rx: 2,
+            fill: '#fafaf7', stroke: '#ebeae3', strokeWidth: 1
+          }),
+          React.createElement('text', {
+            x: 7, y: 11,
+            fontSize: '8', fontWeight: '600',
+            fill: '#1f1f1c', fontFamily: 'JetBrains Mono, monospace'
+          }, s),
+        )
+      ),
+
+      // Divider
+      React.createElement('line', {
+        x1: cardX(idx) + 14, x2: cardX(idx) + cardW - 14,
+        y1: cardY + 105, y2: cardY + 105,
+        stroke: '#ebeae3', strokeWidth: 1
+      }),
+
+      // Time metric
+      React.createElement('text', {
+        x: cardX(idx) + 14, y: cardY + 122,
+        fontSize: '7', fontWeight: '700',
+        fill: '#8a8a82', letterSpacing: '0.12em',
+        fontFamily: 'JetBrains Mono, monospace'
+      }, 'TIEMPO'),
+      React.createElement('text', {
+        x: cardX(idx) + cardW - 14, y: cardY + 122,
+        textAnchor: 'end',
+        fontSize: '13', fontWeight: '900',
+        fill: d.color, fontFamily: 'JetBrains Mono, monospace',
+        letterSpacing: '-0.02em'
+      }, d.time),
+
+      // RAM metric
+      React.createElement('text', {
+        x: cardX(idx) + 14, y: cardY + 146,
+        fontSize: '7', fontWeight: '700',
+        fill: '#8a8a82', letterSpacing: '0.12em',
+        fontFamily: 'JetBrains Mono, monospace'
+      }, 'RAM'),
+      React.createElement('text', {
+        x: cardX(idx) + cardW - 14, y: cardY + 146,
+        textAnchor: 'end',
+        fontSize: '13', fontWeight: '900',
+        fill: d.color, fontFamily: 'JetBrains Mono, monospace',
+        letterSpacing: '-0.02em'
+      }, d.ram),
+
+      // Status badge
+      React.createElement('g', { transform: `translate(${cardX(idx) + 14}, ${cardY + 162})` },
+        React.createElement('rect', {
+          x: 0, y: 0, width: cardW - 28, height: 22, rx: 2,
+          fill: d.color
+        }),
+        React.createElement('text', {
+          x: 12, y: 15,
+          fontSize: '11', fontWeight: '900',
+          fill: 'white'
+        }, d.icon),
+        React.createElement('text', {
+          x: cardW / 2 - 4, y: 15, textAnchor: 'middle',
+          fontSize: '9', fontWeight: '700',
+          fill: 'white', letterSpacing: '0.1em',
+          fontFamily: 'JetBrains Mono, monospace'
+        }, d.status)
+      ),
+
+      // Description (small)
+      React.createElement('foreignObject', {
+        x: cardX(idx) + 14, y: cardY + 195,
+        width: cardW - 28, height: 50
+      },
+        React.createElement('div', {
+          xmlns: 'http://www.w3.org/1999/xhtml',
+          style: {
+            fontSize: '0.6rem', lineHeight: 1.35,
+            color: '#4a4a45', fontFamily: 'EB Garamond, serif',
+            fontStyle: 'italic'
+          }
+        }, d.desc)
+      )
+    );
+  };
+
+  // Connector arrow between cards
+  const Arrow = ({ from, to, lit }) => {
+    const x1 = cardX(from) + cardW;
+    const x2 = cardX(to);
+    const y  = cardY + cardH / 2;
+    return React.createElement('g', null,
+      React.createElement('line', {
+        x1, y1: y, x2: x2 - 6, y2: y,
+        stroke: lit ? '#0a0a0a' : '#d8d8d0',
+        strokeWidth: lit ? 2 : 1.4,
+        strokeDasharray: '5,3',
+        style: { transition: 'stroke 0.5s, stroke-width 0.5s' }
+      }),
+      React.createElement('polygon', {
+        points: `${x2 - 6},${y - 4} ${x2},${y} ${x2 - 6},${y + 4}`,
+        fill: lit ? '#0a0a0a' : '#d8d8d0',
+        style: { transition: 'fill 0.5s' }
+      })
+    );
+  };
+
+  // Lesson box (bottom)
+  const lesson = active < 3 ? iters[active].lesson :
+    'Tres iteraciones, un único aprendizaje: medir antes de optimizar y reformular antes de escalar.';
+  const lessonColor = active < 3 ? iters[active].color : '#0a0a0a';
+
+  return React.createElement('div', { ref, style: { fontFamily: 'JetBrains Mono, monospace' } },
+    React.createElement('svg',
+      { width: '100%', viewBox: `0 0 ${W} ${H}`, style: { overflow: 'visible' } },
+
+      // Header
+      React.createElement('text', {
+        x: gap, y: 16,
+        fontSize: '8.5', fontWeight: '700',
+        fill: '#8a8a82', letterSpacing: '0.16em'
+      }, 'EVOLUCIÓN DEL MOTOR · TRES ITERACIONES'),
+
+      // Cards
+      ...iters.map((d, i) => React.createElement(Card, { key: i, d, idx: i })),
+
+      // Arrows
+      React.createElement(Arrow, { from: 0, to: 1, lit: active >= 1 }),
+      React.createElement(Arrow, { from: 1, to: 2, lit: active >= 2 }),
+
+      // Lesson at bottom
+      React.createElement('rect', {
+        x: gap, y: H - 50, width: W - 2 * gap, height: 36, rx: 2,
+        fill: '#fafaf7', stroke: lessonColor, strokeWidth: 1.2,
+        style: { transition: 'stroke 0.4s' }
+      }),
+      React.createElement('text', {
+        x: gap + 14, y: H - 31,
+        fontSize: '8', fontWeight: '700',
+        fill: lessonColor, letterSpacing: '0.12em'
+      }, '→ APRENDIZAJE'),
+      React.createElement('foreignObject', {
+        x: gap + 110, y: H - 46, width: W - 2 * gap - 124, height: 32
+      },
+        React.createElement('div', {
+          xmlns: 'http://www.w3.org/1999/xhtml',
+          style: {
+            fontSize: '0.78rem', lineHeight: 1.4,
+            color: '#1f1f1c', fontFamily: 'EB Garamond, serif',
+            fontStyle: 'italic'
+          }
+        }, lesson)
+      ),
+
+      // Step dots
+      ...[0, 1, 2, 3].map(i =>
+        React.createElement('circle', {
+          key: `jd${i}`,
+          cx: W / 2 - 21 + i * 14, cy: H - 4, r: 3.5,
+          fill: i === active ? '#0a0a0a' : '#d8d8d0',
+          style: { transition: 'fill 0.3s', cursor: 'pointer' },
+          onClick: () => setActive(i),
+        })
+      )
+    ),
+
+    React.createElement('p', {
+      style: {
+        fontSize: '0.6rem', color: '#8a8a82', marginTop: '0.5rem',
+        fontFamily: 'EB Garamond, serif', fontStyle: 'italic', textAlign: 'right'
+      }
+    }, '* tiempo medido cuando la ejecución no terminaba en OOM-kill antes de finalizar.')
+  );
+};
+</script>
+<script>// ── Fig 5 — Saturación del sistema bajo el modelo naive ────────────────────
+// Dashboard de telemetría que reconstruye el comportamiento de la primera
+// iteración (Polars + lectura estándar) corriendo el cotejo con n=10.000 y d₁=d₂=120 días.
+
+const FigOverload = () => {
+  const [ref, visible] = useInView(0.15);
+  const [t, setT] = useState(0);  // 0..100  ─ progreso simulado del run
+
+  useEffect(() => {
+    if (!visible) return;
+    const id = setInterval(() => setT(x => (x >= 110 ? 0 : x + 2)), 200);
+    return () => clearInterval(id);
+  }, [visible]);
+
+  // Curvas de telemetría (reconstruidas a partir del comportamiento real
+  // observado en la iteración v1: RAM crece lineal con la explosión
+  // cartesiana durante la normalización, SWAP entra al 70 %, CPU sostiene 100 % desde t=15).
+  const ram  = Math.min(100, t * 1.05);
+  const cpu  = t > 8 ? 100 : t * 12;
+  const swap = t > 70 ? Math.min(95, (t - 70) * 4) : 0;
+  const io   = t > 70 ? 80 + Math.sin(t * 0.5) * 12 : 30 + Math.sin(t * 0.3) * 18;
+  const oomTriggered = ram >= 100;
+
+  const barColor = pct =>
+    pct >= 90 ? '#991b1b' : pct >= 70 ? '#92400e' : pct >= 40 ? '#d97706' : '#15803d';
+
+  const W = 720, H = 360;
+
+  // ─ Dashboard frame ─────────────────────────────────────────────────────
+  const Frame = () => React.createElement('g', null,
+    React.createElement('rect', {
+      x: 0, y: 0, width: W, height: H, rx: 4,
+      fill: '#0a0a0a', stroke: '#1f1f1c', strokeWidth: 1
+    }),
+    // Top bar
+    React.createElement('rect', {
+      x: 0, y: 0, width: W, height: 28,
+      fill: '#1f1f1c'
+    }),
+    React.createElement('circle', { cx: 14, cy: 14, r: 4, fill: oomTriggered ? '#991b1b' : '#15803d',
+      style: oomTriggered ? { animation: 'pulse-red 1s infinite' } : {} }),
+    React.createElement('text', {
+      x: 28, y: 18,
+      fontSize: '9.5', fontWeight: '700', fill: '#fafaf7',
+      letterSpacing: '0.14em', fontFamily: 'JetBrains Mono, monospace'
+    }, 'MONITOR DE SISTEMA · MODELO NAIVE · v1 (Polars + openpyxl)'),
+    React.createElement('text', {
+      x: W - 14, y: 18, textAnchor: 'end',
+      fontSize: '9', fontWeight: '600', fill: '#8a8a82',
+      fontFamily: 'JetBrains Mono, monospace'
+    }, oomTriggered ? '⚠ KERNEL OOM-KILLER ACTIVADO' : `t = ${(t * 7.2).toFixed(0)} s · run en curso`)
+  );
+
+  // ─ Vertical bar gauge ──────────────────────────────────────────────────
+  const Gauge = ({ x, label, value, unit, peak }) => {
+    const barH = 200, barX = x, barY = 70;
+    const fillH = (value / 100) * barH;
+    const c = barColor(value);
+    return React.createElement('g', null,
+      // Label
+      React.createElement('text', {
+        x: barX + 36, y: barY - 12, textAnchor: 'middle',
+        fontSize: '8.5', fontWeight: '700', fill: '#8a8a82',
+        letterSpacing: '0.12em', fontFamily: 'JetBrains Mono, monospace'
+      }, label),
+      // Track
+      React.createElement('rect', {
+        x: barX, y: barY,
+        width: 72, height: barH, rx: 2,
+        fill: '#1f1f1c', stroke: '#2a2a25', strokeWidth: 1
+      }),
+      // Grid lines
+      ...[0.25, 0.5, 0.75].map(f =>
+        React.createElement('line', {
+          key: f,
+          x1: barX, x2: barX + 72,
+          y1: barY + (1 - f) * barH, y2: barY + (1 - f) * barH,
+          stroke: '#2a2a25', strokeWidth: 1, strokeDasharray: '2,2'
+        })
+      ),
+      // 90% danger line
+      React.createElement('line', {
+        x1: barX - 4, x2: barX + 76,
+        y1: barY + 0.1 * barH, y2: barY + 0.1 * barH,
+        stroke: '#991b1b', strokeWidth: 1, strokeDasharray: '4,2'
+      }),
+      React.createElement('text', {
+        x: barX - 6, y: barY + 0.1 * barH + 3, textAnchor: 'end',
+        fontSize: '6.5', fill: '#991b1b', fontWeight: '700',
+        fontFamily: 'JetBrains Mono, monospace'
+      }, '90'),
+      // Fill
+      React.createElement('rect', {
+        x: barX, y: barY + barH - fillH,
+        width: 72, height: fillH,
+        fill: c, opacity: 0.85,
+        style: {
+          transition: 'height 0.25s linear, y 0.25s linear, fill 0.4s'
+        }
+      }),
+      // Value
+      React.createElement('text', {
+        x: barX + 36, y: barY + barH + 22, textAnchor: 'middle',
+        fontSize: '17', fontWeight: '900', fill: c,
+        fontFamily: 'JetBrains Mono, monospace',
+        letterSpacing: '-0.02em',
+        style: { transition: 'fill 0.4s' }
+      }, `${value.toFixed(0)}${unit}`),
+      // Peak ref
+      peak && React.createElement('text', {
+        x: barX + 36, y: barY + barH + 36, textAnchor: 'middle',
+        fontSize: '7', fill: '#8a8a82', fontStyle: 'italic',
+        fontFamily: 'EB Garamond, serif'
+      }, `pico: ${peak}`)
+    );
+  };
+
+  // ─ Side log ───────────────────────────────────────────────────────────
+  const logs = [
+    { at: 5,   c: '#8a8a82', txt: '> reading source.xlsx (Polars + openpyxl)' },
+    { at: 12,  c: '#8a8a82', txt: '> reading dest.csv ...........  done' },
+    { at: 22,  c: '#d97706', txt: '> melt(): pivot wide → long' },
+    { at: 35,  c: '#d97706', txt: '> explode(BW)  →  3.6e6 rows' },
+    { at: 50,  c: '#92400e', txt: '> explode(TP)  →  1.4e8 rows' },
+    { at: 70,  c: '#92400e', txt: '⚠ memory pressure: swapping' },
+    { at: 85,  c: '#991b1b', txt: '⚠ join() allocating intermediate buffer' },
+    { at: 95,  c: '#991b1b', txt: '⚠ MemoryError raised in worker' },
+    { at: 100, c: '#991b1b', txt: '✗ killed (OOM-killer · signal 9)' },
+  ];
+  const visibleLogs = logs.filter(l => t >= l.at);
+
+  return React.createElement('div', { ref, style: { fontFamily: 'JetBrains Mono, monospace' } },
+    // Inline keyframes for the alert pulse
+    React.createElement('style', null,
+      `@keyframes pulse-red { 0%,100%{opacity:1} 50%{opacity:0.35} }
+       @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-1px)} 75%{transform:translateX(1px)} }`
+    ),
+
+    React.createElement('svg', {
+      width: '100%', viewBox: `0 0 ${W} ${H}`,
+      style: { overflow: 'visible', borderRadius: 4 }
+    },
+      React.createElement(Frame),
+
+      // Four gauges
+      React.createElement(Gauge, { x: 28,  label: 'RAM',  value: ram,  unit: '%', peak: '9.8 GB / 16' }),
+      React.createElement(Gauge, { x: 122, label: 'CPU',  value: cpu,  unit: '%', peak: '8 cores @ 100%' }),
+      React.createElement(Gauge, { x: 216, label: 'SWAP', value: swap, unit: '%', peak: 'thrashing' }),
+      React.createElement(Gauge, { x: 310, label: 'I/O',  value: io,   unit: '%', peak: 'spike pattern' }),
+
+      // Right panel — log
+      React.createElement('rect', {
+        x: 410, y: 56, width: 290, height: 232, rx: 3,
+        fill: '#1f1f1c', stroke: '#2a2a25', strokeWidth: 1
+      }),
+      React.createElement('text', {
+        x: 422, y: 73,
+        fontSize: '8', fontWeight: '700', fill: '#8a8a82',
+        letterSpacing: '0.12em'
+      }, 'STDERR · STREAM EN VIVO'),
+      React.createElement('line', {
+        x1: 410, y1: 80, x2: 700, y2: 80,
+        stroke: '#2a2a25', strokeWidth: 1
+      }),
+      ...visibleLogs.slice(-9).map((l, i) =>
+        React.createElement('text', {
+          key: `log-${l.at}`,
+          x: 422, y: 96 + i * 22,
+          fontSize: '8.5', fill: l.c,
+          fontFamily: 'JetBrains Mono, monospace',
+          style: l.c === '#991b1b' ? { animation: 'pulse-red 1.4s infinite' } : {}
+        }, l.txt)
+      ),
+
+      // Result banner at bottom
+      oomTriggered && React.createElement('g', { style: { animation: 'pulse-red 1.5s infinite' } },
+        React.createElement('rect', {
+          x: 0, y: H - 36, width: W, height: 36,
+          fill: '#991b1b'
+        }),
+        React.createElement('text', {
+          x: W / 2, y: H - 14, textAnchor: 'middle',
+          fontSize: '11', fontWeight: '900', fill: 'white',
+          letterSpacing: '0.1em'
+        }, '✗  PROCESO INTERRUMPIDO  ·  EJECUCIÓN INVIABLE EN HARDWARE DE EQUIPO  ·  MEMORIA SATURADA')
+      ),
+
+      !oomTriggered && React.createElement('g', null,
+        React.createElement('rect', {
+          x: 0, y: H - 36, width: W, height: 36,
+          fill: '#1f1f1c'
+        }),
+        React.createElement('text', {
+          x: 14, y: H - 14,
+          fontSize: '9', fontWeight: '700', fill: '#fafaf7',
+          letterSpacing: '0.08em'
+        }, `RUN EN CURSO · ${(100 - ram).toFixed(0)}% RAM disponible · proyección: OOM en ${Math.max(0, ((100 - ram) / 1.05 * 0.2)).toFixed(1)} s`)
+      )
+    ),
+
+    React.createElement('p', {
+      style: {
+        fontSize: '0.62rem', color: '#8a8a82', marginTop: '0.5rem',
+        fontFamily: 'EB Garamond, serif', fontStyle: 'italic'
+      }
+    },
+      'Telemetría reconstruida a partir de la primera iteración (Polars + openpyxl, máquina de equipo de 16 GB). El crecimiento lineal de RAM es directa consecuencia de materializar 1,44 × 10⁸ filas durante la normalización, tras los dos ',
+      React.createElement('code', { style: { fontFamily: 'JetBrains Mono, monospace', fontSize: '0.62rem' } }, 'explode()'),
+      '. El kernel intercepta el proceso antes de poder ejecutar el join.'
+    )
+  );
+};
+</script>
+<script>// ── Fig 1 — Representación geométrica BW × TP en R² ──────────────────────────
+// Cada oferta es un rectángulo en el plano (Booking Window × Travel Period).
+// La conciliación se reduce a detectar intersecciones rectangulares.
+
+const Fig1 = () => {
+  const [tick, setTick] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(() => setTick(x => x + 1), 2400);
+    return () => clearInterval(t);
+  }, [paused]);
+
+  const phase = tick % 5;
+  const W = 460, H = 280;
+  const pad = { l: 56, b: 46, r: 26, t: 28 };
+  const iW = W - pad.l - pad.r;
+  const iH = H - pad.t - pad.b;
+  const D = 32;
+  const px = v => pad.l + (v / D) * iW;
+  const py = v => H - pad.b - (v / D) * iH;
+
+  // Three offers: A (origen), B & C (destino)
+  const offers = [
+    { id: 'A', bw: [2, 14],  tp: [6, 18],  c: '#1e3a8a', dash: false, label: 'O₁ origen' },
+    { id: 'B', bw: [8, 22],  tp: [12, 26], c: '#15803d', dash: true,  label: 'O₂ destino' },
+    { id: 'C', bw: [18, 30], tp: [4, 16],  c: '#5f3dc4', dash: true,  label: 'O₃ destino' },
+  ];
+
+  const showInter = phase === 4;
+  const gridVals = [0, 8, 16, 24, 32];
+
+  // Phase descriptions
+  const phaseLabels = [
+    'Fase 1 — Sistema origen define O₁',
+    'Fase 2 — Sistema destino reporta O₂',
+    'Fase 3 — Sistema destino reporta O₃',
+    'Fase 4 — Vista superpuesta',
+    'Fase 5 — Intersección O₁ ∩ O₂ detectada',
+  ];
+
+  return React.createElement('div',
+    { onClick: () => setPaused(p => !p), style: { cursor: 'pointer', userSelect: 'none' }, title: 'Click para pausar / reanudar' },
+
+    // Phase description bar
+    React.createElement('div', {
+      style: {
+        fontSize: '0.66rem', fontFamily: 'JetBrains Mono, monospace',
+        color: '#1f1f1c', marginBottom: '0.7rem',
+        background: '#f5f4ee', padding: '0.45rem 0.85rem',
+        borderLeft: '3px solid #0a0a0a',
+        letterSpacing: '0.04em'
+      }
+    }, phaseLabels[phase]),
+
+    React.createElement('svg', {
+      width: '100%', viewBox: `0 0 ${W} ${H}`,
+      style: { fontFamily: 'JetBrains Mono, monospace', overflow: 'visible' }
+    },
+
+      // Plane background
+      React.createElement('rect', {
+        x: pad.l, y: pad.t,
+        width: iW, height: iH,
+        fill: '#fafaf7', stroke: 'none'
+      }),
+
+      // Grid lines
+      ...gridVals.flatMap(v => [
+        React.createElement('line', {
+          key: `gv${v}`,
+          x1: px(v), y1: pad.t, x2: px(v), y2: H - pad.b,
+          stroke: '#ebeae3', strokeWidth: '0.8'
+        }),
+        React.createElement('line', {
+          key: `gh${v}`,
+          x1: pad.l, y1: py(v), x2: W - pad.r, y2: py(v),
+          stroke: '#ebeae3', strokeWidth: '0.8'
+        }),
+        React.createElement('text', {
+          key: `lx${v}`,
+          x: px(v), y: H - pad.b + 14,
+          textAnchor: 'middle', fontSize: '7.5', fill: '#8a8a82'
+        }, v),
+        React.createElement('text', {
+          key: `ly${v}`,
+          x: pad.l - 6, y: py(v) + 3,
+          textAnchor: 'end', fontSize: '7.5', fill: '#8a8a82'
+        }, v),
+      ]),
+
+      // Axes
+      React.createElement('line', {
+        x1: pad.l, y1: pad.t, x2: pad.l, y2: H - pad.b,
+        stroke: '#0a0a0a', strokeWidth: '1.5'
+      }),
+      React.createElement('line', {
+        x1: pad.l, y1: H - pad.b, x2: W - pad.r, y2: H - pad.b,
+        stroke: '#0a0a0a', strokeWidth: '1.5'
+      }),
+
+      // Axis labels
+      React.createElement('text', {
+        x: W / 2 + pad.l / 6, y: H - 6,
+        textAnchor: 'middle', fontSize: '8.5', fill: '#1f1f1c',
+        fontWeight: '700', letterSpacing: '0.08em'
+      }, 'Booking Window  →  bw'),
+      React.createElement('text', {
+        x: 14, y: H / 2,
+        textAnchor: 'middle', fontSize: '8.5', fill: '#1f1f1c',
+        fontWeight: '700', letterSpacing: '0.08em',
+        transform: `rotate(-90, 14, ${H / 2})`
+      }, 'Travel Period  →  tp'),
+
+      // Origin marker
+      React.createElement('text', {
+        x: pad.l - 6, y: H - pad.b + 14,
+        textAnchor: 'end', fontSize: '7.5', fill: '#0a0a0a',
+        fontStyle: 'italic'
+      }, 'O'),
+
+      // Offer rectangles
+      ...offers.map((o, i) => {
+        const x1 = px(o.bw[0]), x2 = px(o.bw[1]);
+        const y1 = py(o.tp[1]), y2 = py(o.tp[0]);
+        const visible = phase >= i || phase === 3 || phase === 4;
+        const focused = phase === i || phase === 3 || phase === 4;
+        return React.createElement('g', { key: o.id, opacity: visible ? 1 : 0,
+          style: { transition: 'opacity 0.4s' }
+        },
+          React.createElement('rect', {
+            x: x1, y: y1,
+            width: x2 - x1, height: y2 - y1,
+            fill: o.c,
+            fillOpacity: focused ? 0.18 : 0.06,
+            stroke: o.c,
+            strokeWidth: focused ? 2.2 : 0.9,
+            strokeDasharray: o.dash ? '5,3' : 'none',
+            style: { transition: 'fill-opacity 0.4s, stroke-width 0.4s' }
+          }),
+          // Corner endpoints
+          React.createElement('circle', { cx: x1, cy: y2, r: 2.5, fill: o.c, opacity: focused ? 1 : 0.4 }),
+          React.createElement('circle', { cx: x2, cy: y1, r: 2.5, fill: o.c, opacity: focused ? 1 : 0.4 }),
+          // Label
+          focused && React.createElement('text', {
+            x: (x1 + x2) / 2,
+            y: (y1 + y2) / 2 + 3,
+            textAnchor: 'middle',
+            fontSize: '8',
+            fontWeight: '700',
+            fill: o.c,
+            className: 'svg-fade-in',
+          }, o.label),
+        );
+      }),
+
+      // Intersection region O₁ ∩ O₂
+      showInter && React.createElement('g', { className: 'svg-fade-in' },
+        React.createElement('rect', {
+          x: px(8), y: py(18),
+          width: px(14) - px(8),
+          height: py(12) - py(18),
+          fill: '#991b1b', fillOpacity: 0.4,
+          stroke: '#991b1b', strokeWidth: '1.6'
+        }),
+        React.createElement('text', {
+          x: (px(8) + px(14)) / 2,
+          y: (py(18) + py(12)) / 2 + 3,
+          textAnchor: 'middle', fontSize: '8',
+          fontWeight: '700', fill: '#7f1d1d'
+        }, 'O₁ ∩ O₂'),
+        // Annotation arrow
+        React.createElement('line', {
+          x1: (px(8) + px(14)) / 2 + 22,
+          y1: (py(18) + py(12)) / 2 - 12,
+          x2: (px(8) + px(14)) / 2 + 8,
+          y2: (py(18) + py(12)) / 2 - 4,
+          stroke: '#7f1d1d', strokeWidth: 1
+        }),
+        React.createElement('text', {
+          x: (px(8) + px(14)) / 2 + 26,
+          y: (py(18) + py(12)) / 2 - 14,
+          fontSize: '7', fill: '#7f1d1d', fontStyle: 'italic'
+        }, 'match!'),
+      ),
+
+      // Legend
+      React.createElement('rect', {
+        x: W - 138, y: pad.t + 2,
+        width: 122, height: 64,
+        fill: 'white', stroke: '#d8d8d0', strokeWidth: '1', rx: 2
+      }),
+      ...[
+        { c: '#1e3a8a', dash: false, lbl: 'origen ─── sólido' },
+        { c: '#15803d', dash: true,  lbl: 'destino ╴╴ punteado' },
+        { c: '#991b1b', dash: false, lbl: 'intersección' },
+      ].map((l, i) =>
+        React.createElement('g', {
+          key: l.lbl,
+          transform: `translate(${W - 132}, ${pad.t + 12 + i * 18})`
+        },
+          React.createElement('rect', {
+            width: 14, height: 9,
+            fill: l.c, fillOpacity: 0.22,
+            stroke: l.c, strokeDasharray: l.dash ? '4,2' : 'none',
+            strokeWidth: '1.3'
+          }),
+          React.createElement('text', {
+            x: 19, y: 8, fontSize: '7.5', fill: '#1f1f1c'
+          }, l.lbl),
+        )
+      ),
+
+      // Phase indicator dots
+      ...[0, 1, 2, 3, 4].map(i =>
+        React.createElement('circle', {
+          key: `dot${i}`,
+          cx: W / 2 - 28 + i * 14,
+          cy: H - 4,
+          r: 3.5,
+          fill: i === phase ? '#0a0a0a' : '#d8d8d0',
+          style: { transition: 'fill 0.3s' }
+        })
+      ),
+
+      // Pause overlay
+      paused && React.createElement('g', null,
+        React.createElement('rect', {
+          x: W / 2 - 32, y: H - 26, width: 64, height: 16, rx: 2,
+          fill: '#0a0a0a', fillOpacity: 0.85
+        }),
+        React.createElement('text', {
+          x: W / 2, y: H - 15, textAnchor: 'middle',
+          fontSize: '7.5', fill: 'white',
+          letterSpacing: '0.1em'
+        }, '⏸ PAUSADO')
+      )
+    )
+  );
+};
+</script>
+<script>// ── Fig 2 — Pipeline: archivos de entrada → árbol de intervalos → reporte ───
+// Muestra el flujo completo de procesamiento: dos archivos heterogéneos
+// (xlsx, csv) se normalizan, se indexan en el árbol, se cotejan y se exporta
+// un reporte tabular con el estado de cada oferta.
+
+const Fig2 = () => {
+  const [phase, setPhase] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(() => setPhase(p => (p + 1) % 5), 2200);
+    return () => clearInterval(t);
+  }, [paused]);
+
+  // ── Layout dimensions ─────────────────────────────────────────────────────
+  const W = 520, H = 300;
+
+  // Stage X-positions
+  const stages = {
+    src:    { x: 16,  w: 100 },
+    parse:  { x: 138, w: 90  },
+    tree:   { x: 250, w: 96  },
+    diff:   { x: 362, w: 80  },
+    out:    { x: 458, w: 56  },
+  };
+
+  const isActive = (idx) => phase >= idx;
+  const isCurrent = (idx) => phase === idx;
+
+  // ── Color helpers ─────────────────────────────────────────────────────────
+  const inkActive  = '#0a0a0a';
+  const inkIdle    = '#b8b8af';
+  const accentBlue = '#1e3a8a';
+  const accentGreen= '#15803d';
+  const accentAmber= '#92400e';
+
+  // ── Reusable: dotted connector with travelling pulse ──────────────────────
+  const Connector = ({ x1, x2, y, active }) =>
+    React.createElement('g', null,
+      React.createElement('line', {
+        x1, x2, y1: y, y2: y,
+        stroke: active ? inkActive : inkIdle,
+        strokeWidth: 1.4,
+        strokeDasharray: '3,3',
+        style: { transition: 'stroke 0.4s' }
+      }),
+      // Travelling pulse
+      active && React.createElement('circle', {
+        cx: x1, cy: y, r: 3, fill: accentBlue,
+        style: {
+          animation: `pulse-travel-${y} 1.4s linear infinite`,
+        }
+      }),
+      // Inline keyframes
+      active && React.createElement('style', null,
+        `@keyframes pulse-travel-${y} {
+          0%   { transform: translateX(0); opacity: 0; }
+          15%  { opacity: 1; }
+          85%  { opacity: 1; }
+          100% { transform: translateX(${x2 - x1}px); opacity: 0; }
+        }`
+      ),
+      // Arrow head
+      React.createElement('path', {
+        d: `M${x2 - 5},${y - 3} L${x2},${y} L${x2 - 5},${y + 3}`,
+        fill: 'none',
+        stroke: active ? inkActive : inkIdle,
+        strokeWidth: 1.4,
+        strokeLinejoin: 'miter',
+        style: { transition: 'stroke 0.4s' }
+      }),
+    );
+
+  // ── Stage label (above each box) ──────────────────────────────────────────
+  const StageLabel = ({ x, w, n, txt, active }) =>
+    React.createElement('g', null,
+      React.createElement('text', {
+        x: x + w / 2, y: 16,
+        textAnchor: 'middle',
+        fontSize: '6.5',
+        fontFamily: 'JetBrains Mono, monospace',
+        fontWeight: '600',
+        letterSpacing: '0.16em',
+        fill: active ? '#0a0a0a' : '#b8b8af',
+        style: { transition: 'fill 0.4s' }
+      }, `${n} · ${txt}`),
+    );
+
+  // ── 1. Source files (xlsx + csv) ─────────────────────────────────────────
+  const SourceFiles = () => {
+    const a = isActive(0);
+    return React.createElement('g', null,
+      // xlsx file
+      React.createElement('g', { transform: `translate(${stages.src.x + 8}, 38)` },
+        React.createElement('rect', {
+          width: 84, height: 70, rx: 2,
+          fill: 'white',
+          stroke: a ? '#15803d' : '#b8b8af',
+          strokeWidth: a ? 1.6 : 1,
+          style: { transition: 'stroke 0.4s' }
+        }),
+        // Folded corner
+        React.createElement('path', {
+          d: 'M70,0 L84,14 L70,14 Z',
+          fill: a ? '#d3f9d8' : '#e8e7df',
+          stroke: a ? '#15803d' : '#b8b8af',
+          strokeWidth: a ? 1.6 : 1,
+          style: { transition: 'all 0.4s' }
+        }),
+        // Header rows
+        ...[26, 36, 46, 56].map((y, i) =>
+          React.createElement('rect', {
+            key: `r${y}`,
+            x: 6, y, width: 56, height: 4,
+            fill: i === 0 ? (a ? '#15803d' : '#b8b8af') : (a ? '#d3f9d8' : '#ebeae3'),
+            opacity: i === 0 ? 0.85 : 0.7,
+            style: { transition: 'fill 0.4s' }
+          })
+        ),
+        React.createElement('text', {
+          x: 6, y: 19, fontSize: '7', fontFamily: 'JetBrains Mono, monospace',
+          fontWeight: '700', fill: a ? '#15803d' : '#8a8a82',
+          style: { transition: 'fill 0.4s' }
+        }, '.XLSX'),
+      ),
+
+      // csv file (slightly behind/below)
+      React.createElement('g', { transform: `translate(${stages.src.x + 18}, 124)` },
+        React.createElement('rect', {
+          width: 76, height: 60, rx: 2,
+          fill: 'white',
+          stroke: a ? '#92400e' : '#b8b8af',
+          strokeWidth: a ? 1.6 : 1,
+          style: { transition: 'stroke 0.4s' }
+        }),
+        React.createElement('path', {
+          d: 'M62,0 L76,14 L62,14 Z',
+          fill: a ? '#fff4e6' : '#e8e7df',
+          stroke: a ? '#92400e' : '#b8b8af',
+          strokeWidth: a ? 1.6 : 1,
+          style: { transition: 'all 0.4s' }
+        }),
+        // Comma-separated lines
+        ...[26, 35, 44].map((y, i) =>
+          React.createElement('text', {
+            key: `c${y}`,
+            x: 5, y: y,
+            fontSize: '5.5',
+            fontFamily: 'JetBrains Mono, monospace',
+            fill: a ? '#92400e' : '#b8b8af',
+            opacity: 0.7,
+            style: { transition: 'fill 0.4s' }
+          }, ['a;b;c;d', '01;12;15', '02;13;20'][i])
+        ),
+        React.createElement('text', {
+          x: 5, y: 19, fontSize: '7', fontFamily: 'JetBrains Mono, monospace',
+          fontWeight: '700', fill: a ? '#92400e' : '#8a8a82',
+          style: { transition: 'fill 0.4s' }
+        }, '.CSV'),
+      ),
+
+      // Description below
+      React.createElement('text', {
+        x: stages.src.x + stages.src.w / 2, y: 200,
+        textAnchor: 'middle', fontSize: '7',
+        fontFamily: 'EB Garamond, serif',
+        fontStyle: 'italic',
+        fill: a ? '#4a4a45' : '#b8b8af',
+        style: { transition: 'fill 0.4s' }
+      }, 'Heterogéneo'),
+      React.createElement('text', {
+        x: stages.src.x + stages.src.w / 2, y: 211,
+        textAnchor: 'middle', fontSize: '7',
+        fontFamily: 'EB Garamond, serif',
+        fontStyle: 'italic',
+        fill: a ? '#4a4a45' : '#b8b8af',
+        style: { transition: 'fill 0.4s' }
+      }, 'origen vs. destino'),
+    );
+  };
+
+  // ── 2. Parser/Normalizer ─────────────────────────────────────────────────
+  const Parser = () => {
+    const a = isActive(1);
+    return React.createElement('g', null,
+      React.createElement('rect', {
+        x: stages.parse.x, y: 60,
+        width: stages.parse.w, height: 130,
+        rx: 3,
+        fill: 'white',
+        stroke: a ? inkActive : inkIdle,
+        strokeWidth: a ? 1.8 : 1,
+        style: { transition: 'stroke 0.4s' }
+      }),
+      React.createElement('text', {
+        x: stages.parse.x + stages.parse.w / 2, y: 78,
+        textAnchor: 'middle', fontSize: '8',
+        fontFamily: 'JetBrains Mono, monospace',
+        fontWeight: '700',
+        fill: a ? inkActive : inkIdle,
+        style: { transition: 'fill 0.4s' }
+      }, 'parse() / clean()'),
+
+      // Table preview inside
+      ...['hotel │ room │ bw │ tp', '──────┼──────┼────┼───',
+          'A1234 │ DDST │ +12│ 06', 'A1234 │ DDST │ +12│ 07',
+          'B0027 │ JRSU │ +30│ 18', 'C0099 │ DJSL │ +05│ 22']
+        .map((line, i) =>
+          React.createElement('text', {
+            key: `pl${i}`,
+            x: stages.parse.x + 6, y: 95 + i * 12,
+            fontSize: '5.5',
+            fontFamily: 'JetBrains Mono, monospace',
+            fill: a ? '#0a0a0a' : '#b8b8af',
+            opacity: a ? (i < 2 ? 0.85 : 0.95) : 0.5,
+            style: { transition: 'fill 0.4s, opacity 0.4s' }
+          }, line)
+        ),
+
+      React.createElement('text', {
+        x: stages.parse.x + stages.parse.w / 2, y: 200,
+        textAnchor: 'middle', fontSize: '7',
+        fontFamily: 'EB Garamond, serif',
+        fontStyle: 'italic',
+        fill: a ? '#4a4a45' : '#b8b8af',
+        style: { transition: 'fill 0.4s' }
+      }, 'Esquema'),
+      React.createElement('text', {
+        x: stages.parse.x + stages.parse.w / 2, y: 211,
+        textAnchor: 'middle', fontSize: '7',
+        fontFamily: 'EB Garamond, serif',
+        fontStyle: 'italic',
+        fill: a ? '#4a4a45' : '#b8b8af',
+        style: { transition: 'fill 0.4s' }
+      }, 'unificado'),
+    );
+  };
+
+  // ── 3. Interval Tree 2D ──────────────────────────────────────────────────
+  const TreeBox = () => {
+    const a = isActive(2);
+    const cx = stages.tree.x + stages.tree.w / 2;
+
+    // Mini tree: 1 root + 2 children + 4 grandchildren
+    const treeNodes = [
+      { x: 0,   y: 100, lbl: '15' },
+      { x: -22, y: 122, lbl: '7' },
+      { x: 22,  y: 122, lbl: '23' },
+      { x: -34, y: 144, lbl: '3' },
+      { x: -10, y: 144, lbl: '11' },
+      { x: 10,  y: 144, lbl: '19' },
+      { x: 34,  y: 144, lbl: '27' },
+    ];
+    const treeEdges = [[0,1],[0,2],[1,3],[1,4],[2,5],[2,6]];
+
+    return React.createElement('g', null,
+      React.createElement('rect', {
+        x: stages.tree.x, y: 60,
+        width: stages.tree.w, height: 130,
+        rx: 3,
+        fill: 'white',
+        stroke: a ? accentBlue : inkIdle,
+        strokeWidth: a ? 1.8 : 1,
+        style: { transition: 'stroke 0.4s' }
+      }),
+      React.createElement('text', {
+        x: cx, y: 78,
+        textAnchor: 'middle', fontSize: '8',
+        fontFamily: 'JetBrains Mono, monospace',
+        fontWeight: '700',
+        fill: a ? accentBlue : inkIdle,
+        style: { transition: 'fill 0.4s' }
+      }, 'Interval Tree 2D'),
+
+      // Tree edges
+      ...treeEdges.map(([fr, to], i) =>
+        React.createElement('line', {
+          key: `te${i}`,
+          x1: cx + treeNodes[fr].x, y1: treeNodes[fr].y + 5,
+          x2: cx + treeNodes[to].x, y2: treeNodes[to].y - 5,
+          stroke: a ? accentBlue : inkIdle,
+          strokeWidth: 1, opacity: 0.6,
+          style: { transition: 'stroke 0.4s' }
+        })
+      ),
+
+      // Tree nodes
+      ...treeNodes.map((n, i) =>
+        React.createElement('g', {
+          key: `tn${i}`,
+          className: a ? 'svg-fade-in' : '',
+          style: { animationDelay: `${i * 70}ms` }
+        },
+          React.createElement('circle', {
+            cx: cx + n.x, cy: n.y, r: 6,
+            fill: a ? '#dbe4ff' : '#e8e7df',
+            stroke: a ? accentBlue : inkIdle,
+            strokeWidth: 1.3,
+            style: { transition: 'fill 0.4s, stroke 0.4s' }
+          }),
+          React.createElement('text', {
+            x: cx + n.x, y: n.y + 2.4,
+            textAnchor: 'middle', fontSize: '5.5',
+            fontFamily: 'JetBrains Mono, monospace',
+            fontWeight: '600',
+            fill: a ? accentBlue : '#8a8a82',
+            style: { transition: 'fill 0.4s' }
+          }, n.lbl)
+        )
+      ),
+
+      React.createElement('text', {
+        x: cx, y: 200,
+        textAnchor: 'middle', fontSize: '7',
+        fontFamily: 'EB Garamond, serif',
+        fontStyle: 'italic',
+        fill: a ? '#4a4a45' : '#b8b8af',
+        style: { transition: 'fill 0.4s' }
+      }, 'Indexación'),
+      React.createElement('text', {
+        x: cx, y: 211,
+        textAnchor: 'middle', fontSize: '7',
+        fontFamily: 'EB Garamond, serif',
+        fontStyle: 'italic',
+        fill: a ? '#4a4a45' : '#b8b8af',
+        style: { transition: 'fill 0.4s' }
+      }, 'O(n log n) espacio'),
+    );
+  };
+
+  // ── 4. Cross-check / diff ────────────────────────────────────────────────
+  const Diff = () => {
+    const a = isActive(3);
+    const cx = stages.diff.x + stages.diff.w / 2;
+    return React.createElement('g', null,
+      React.createElement('rect', {
+        x: stages.diff.x, y: 60,
+        width: stages.diff.w, height: 130,
+        rx: 3,
+        fill: 'white',
+        stroke: a ? inkActive : inkIdle,
+        strokeWidth: a ? 1.8 : 1,
+        style: { transition: 'stroke 0.4s' }
+      }),
+      React.createElement('text', {
+        x: cx, y: 78,
+        textAnchor: 'middle', fontSize: '8',
+        fontFamily: 'JetBrains Mono, monospace',
+        fontWeight: '700',
+        fill: a ? inkActive : inkIdle,
+        style: { transition: 'fill 0.4s' }
+      }, 'cross-check'),
+
+      // Two overlapping circles (set-diff visual)
+      React.createElement('circle', {
+        cx: cx - 10, cy: 132, r: 19,
+        fill: a ? 'rgba(21, 128, 61, 0.18)' : 'rgba(184,184,175,0.15)',
+        stroke: a ? accentGreen : inkIdle,
+        strokeWidth: 1.4,
+        style: { transition: 'all 0.4s' }
+      }),
+      React.createElement('circle', {
+        cx: cx + 10, cy: 132, r: 19,
+        fill: a ? 'rgba(30, 58, 138, 0.18)' : 'rgba(184,184,175,0.15)',
+        stroke: a ? accentBlue : inkIdle,
+        strokeWidth: 1.4,
+        style: { transition: 'all 0.4s' }
+      }),
+      React.createElement('text', {
+        x: cx - 18, y: 135, textAnchor: 'middle',
+        fontSize: '6', fontFamily: 'JetBrains Mono, monospace',
+        fill: a ? accentGreen : '#b8b8af',
+        style: { transition: 'fill 0.4s' }
+      }, 'src'),
+      React.createElement('text', {
+        x: cx + 18, y: 135, textAnchor: 'middle',
+        fontSize: '6', fontFamily: 'JetBrains Mono, monospace',
+        fill: a ? accentBlue : '#b8b8af',
+        style: { transition: 'fill 0.4s' }
+      }, 'dst'),
+      React.createElement('text', {
+        x: cx, y: 135, textAnchor: 'middle',
+        fontSize: '6', fontFamily: 'JetBrains Mono, monospace',
+        fontWeight: '700',
+        fill: a ? '#0a0a0a' : '#b8b8af',
+        style: { transition: 'fill 0.4s' }
+      }, '∩'),
+
+      React.createElement('text', {
+        x: cx, y: 200,
+        textAnchor: 'middle', fontSize: '7',
+        fontFamily: 'EB Garamond, serif',
+        fontStyle: 'italic',
+        fill: a ? '#4a4a45' : '#b8b8af',
+        style: { transition: 'fill 0.4s' }
+      }, 'Estados:'),
+      React.createElement('text', {
+        x: cx, y: 211,
+        textAnchor: 'middle', fontSize: '7',
+        fontFamily: 'EB Garamond, serif',
+        fontStyle: 'italic',
+        fill: a ? '#4a4a45' : '#b8b8af',
+        style: { transition: 'fill 0.4s' }
+      }, 'OK · Δ · Falta'),
+    );
+  };
+
+  // ── 5. Output report ─────────────────────────────────────────────────────
+  const Output = () => {
+    const a = isActive(4);
+    return React.createElement('g', null,
+      React.createElement('g', { transform: `translate(${stages.out.x}, 80)` },
+        React.createElement('rect', {
+          width: 56, height: 90, rx: 2,
+          fill: 'white',
+          stroke: a ? inkActive : inkIdle,
+          strokeWidth: a ? 1.8 : 1,
+          style: { transition: 'stroke 0.4s' }
+        }),
+        React.createElement('path', {
+          d: 'M44,0 L56,12 L44,12 Z',
+          fill: a ? '#ebeae3' : '#e8e7df',
+          stroke: a ? inkActive : inkIdle,
+          strokeWidth: a ? 1.8 : 1,
+          style: { transition: 'all 0.4s' }
+        }),
+        // Header label
+        React.createElement('text', {
+          x: 4, y: 19,
+          fontSize: '6.5', fontFamily: 'JetBrains Mono, monospace',
+          fontWeight: '700',
+          fill: a ? '#0a0a0a' : '#8a8a82',
+          style: { transition: 'fill 0.4s' }
+        }, 'reporte.xlsx'),
+        // Status rows (colored)
+        ...[
+          { y: 30, c: a ? '#15803d' : '#d8d8d0', t: 'OK   · 80%' },
+          { y: 42, c: a ? '#92400e' : '#d8d8d0', t: 'Δ    · 12%' },
+          { y: 54, c: a ? '#991b1b' : '#d8d8d0', t: 'Falta · 8%' },
+        ].map((r, i) =>
+          React.createElement('g', {
+            key: `or${i}`,
+            className: a ? 'svg-fade-in' : '',
+            style: { animationDelay: `${i * 100 + 100}ms` }
+          },
+            React.createElement('rect', {
+              x: 4, y: r.y - 7, width: 4, height: 8,
+              fill: r.c, style: { transition: 'fill 0.4s' }
+            }),
+            React.createElement('text', {
+              x: 11, y: r.y,
+              fontSize: '5.5', fontFamily: 'JetBrains Mono, monospace',
+              fill: a ? '#0a0a0a' : '#b8b8af',
+              style: { transition: 'fill 0.4s' }
+            }, r.t)
+          )
+        ),
+      ),
+
+      React.createElement('text', {
+        x: stages.out.x + stages.out.w / 2, y: 200,
+        textAnchor: 'middle', fontSize: '7',
+        fontFamily: 'EB Garamond, serif',
+        fontStyle: 'italic',
+        fill: a ? '#4a4a45' : '#b8b8af',
+        style: { transition: 'fill 0.4s' }
+      }, 'Reporte'),
+      React.createElement('text', {
+        x: stages.out.x + stages.out.w / 2, y: 211,
+        textAnchor: 'middle', fontSize: '7',
+        fontFamily: 'EB Garamond, serif',
+        fontStyle: 'italic',
+        fill: a ? '#4a4a45' : '#b8b8af',
+        style: { transition: 'fill 0.4s' }
+      }, 'consolidado'),
+    );
+  };
+
+  return React.createElement(
+    'div',
+    { onClick: () => setPaused(p => !p), style: { cursor: 'pointer', userSelect: 'none' }, title: 'Click para pausar / reanudar' },
+
+    React.createElement('svg', {
+      width: '100%', viewBox: `0 0 ${W} ${H}`,
+      style: { fontFamily: 'JetBrains Mono, monospace', overflow: 'visible' }
+    },
+
+      // Stage labels
+      React.createElement(StageLabel, { x: stages.src.x,   w: stages.src.w,   n: '01', txt: 'INPUT',   active: isActive(0) }),
+      React.createElement(StageLabel, { x: stages.parse.x, w: stages.parse.w, n: '02', txt: 'PARSE',   active: isActive(1) }),
+      React.createElement(StageLabel, { x: stages.tree.x,  w: stages.tree.w,  n: '03', txt: 'INDEX',   active: isActive(2) }),
+      React.createElement(StageLabel, { x: stages.diff.x,  w: stages.diff.w,  n: '04', txt: 'CHECK',   active: isActive(3) }),
+      React.createElement(StageLabel, { x: stages.out.x,   w: stages.out.w,   n: '05', txt: 'OUTPUT',  active: isActive(4) }),
+
+      // Connectors between stages
+      React.createElement(Connector, {
+        x1: stages.src.x + stages.src.w - 4,   x2: stages.parse.x,
+        y: 125, active: isCurrent(1) || phase >= 1
+      }),
+      React.createElement(Connector, {
+        x1: stages.parse.x + stages.parse.w,   x2: stages.tree.x,
+        y: 125, active: isCurrent(2) || phase >= 2
+      }),
+      React.createElement(Connector, {
+        x1: stages.tree.x + stages.tree.w,     x2: stages.diff.x,
+        y: 125, active: isCurrent(3) || phase >= 3
+      }),
+      React.createElement(Connector, {
+        x1: stages.diff.x + stages.diff.w,     x2: stages.out.x,
+        y: 125, active: isCurrent(4) || phase >= 4
+      }),
+
+      // Stages
+      React.createElement(SourceFiles),
+      React.createElement(Parser),
+      React.createElement(TreeBox),
+      React.createElement(Diff),
+      React.createElement(Output),
+
+      // Phase progress dots
+      ...[0, 1, 2, 3, 4].map(i =>
+        React.createElement('circle', {
+          key: `pd${i}`,
+          cx: W / 2 - 28 + i * 14, cy: H - 8, r: 3.5,
+          fill: i === phase ? '#0a0a0a' : '#d8d8d0',
+          style: { transition: 'fill 0.3s' }
+        })
+      ),
+
+      // Pause indicator
+      paused && React.createElement('g', null,
+        React.createElement('rect', {
+          x: W / 2 - 32, y: H - 28, width: 64, height: 16, rx: 2,
+          fill: '#0a0a0a', fillOpacity: 0.85
+        }),
+        React.createElement('text', {
+          x: W / 2, y: H - 17, textAnchor: 'middle',
+          fontSize: '7.5', fill: 'white',
+          fontFamily: 'JetBrains Mono, monospace',
+          letterSpacing: '0.1em'
+        }, '⏸ PAUSADO')
+      )
+    )
+  );
+};
+</script>
+<script>// ── Fig 3 — Modelo naive: explosión cartesiana ──────────────────────────────
+// Una oferta con BW = 5 días y TP = 5 días genera 25 filas en memoria
+// tras la discretización. La inflación es O(d₁ · d₂).
+
+const Fig3 = () => {
+  const [phase, setPhase] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(() => setPhase(p => (p + 1) % 4), 2600);
+    return () => clearInterval(t);
+  }, [paused]);
+
+  const bw = ['01/06', '02/06', '03/06', '04/06', '05/06'];
+  const tp = ['01/09', '02/09', '03/09', '04/09', '05/09'];
+  const total = bw.length * tp.length;
+
+  return React.createElement('div',
+    { onClick: () => setPaused(p => !p), style: { cursor: 'pointer', userSelect: 'none' }, title: 'Click para pausar / reanudar', },
+
+    React.createElement('div', { style: { fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem' } },
+
+      // Top row: input → arrow → output
+      React.createElement('div',
+        { style: { display: 'flex', gap: '2rem', alignItems: 'flex-start', justifyContent: 'center', flexWrap: 'wrap' } },
+
+        // ── Input card ────────────────────────────────────────────────────
+        React.createElement('div', { style: { textAlign: 'center' } },
+          React.createElement('div', {
+            style: {
+              fontSize: '0.6rem', color: '#8a8a82',
+              textTransform: 'uppercase', letterSpacing: '0.14em',
+              marginBottom: '0.55rem', fontWeight: '600'
+            }
+          }, '01 · OFERTA (entrada)'),
+          React.createElement('div', {
+            style: {
+              border: '2px solid #1e3a8a',
+              padding: '0.8rem 1.05rem',
+              background: 'white', minWidth: '170px',
+              boxShadow: '0 2px 12px rgba(30,58,138,0.08)',
+              transition: 'box-shadow 0.3s'
+            }
+          },
+            React.createElement('div', {
+              style: {
+                fontWeight: '700',
+                borderBottom: '1px solid #ebeae3',
+                paddingBottom: '0.35rem',
+                marginBottom: '0.4rem',
+                color: '#1e3a8a',
+                letterSpacing: '0.05em'
+              }
+            }, 'Oᵢ — registro único'),
+            React.createElement('div', { style: { color: '#4a4a45', marginBottom: '2px' } }, 'bw: [01/06 → 05/06]'),
+            React.createElement('div', { style: { color: '#4a4a45', marginBottom: '2px' } }, 'tp: [01/09 → 05/09]'),
+            React.createElement('div', { style: { color: '#15803d', fontWeight: '700', marginTop: '0.35rem' } }, 'δ = 0.15'),
+          ),
+          React.createElement('div', {
+            style: {
+              marginTop: '0.55rem',
+              background: '#dbe4ff', border: '1px solid #b4c0ff',
+              padding: '0.32rem 0.7rem', fontSize: '0.62rem',
+              color: '#1e3a8a', fontWeight: '600',
+              letterSpacing: '0.04em'
+            }
+          }, '1 fila en memoria')
+        ),
+
+        // ── Arrow ─────────────────────────────────────────────────────────
+        React.createElement('div',
+          { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: '1.6rem' } },
+
+          React.createElement('div', {
+            style: {
+              fontSize: '0.6rem',
+              color: phase > 0 ? '#991b1b' : '#b8b8af',
+              textTransform: 'uppercase', fontWeight: '700',
+              marginBottom: '0.35rem', letterSpacing: '0.1em',
+              transition: 'color 0.3s', fontFamily: 'JetBrains Mono, monospace'
+            }
+          }, 'cartesian explode()'),
+
+          React.createElement('svg', { width: 36, height: 22 },
+            React.createElement('defs', null,
+              React.createElement('marker', {
+                id: 'arrow-head-fig3',
+                viewBox: '0 0 10 10', refX: '8', refY: '5',
+                markerWidth: '6', markerHeight: '6', orient: 'auto'
+              },
+                React.createElement('path', {
+                  d: 'M0,0 L10,5 L0,10 Z',
+                  fill: phase > 0 ? '#991b1b' : '#d8d8d0'
+                })
+              )
+            ),
+            React.createElement('line', {
+              x1: 2, y1: 11, x2: 30, y2: 11,
+              stroke: phase > 0 ? '#991b1b' : '#d8d8d0',
+              strokeWidth: '2',
+              markerEnd: 'url(#arrow-head-fig3)',
+              style: { transition: 'stroke 0.3s' }
+            })
+          ),
+
+          React.createElement('div', {
+            style: { fontSize: '0.62rem', color: '#8a8a82', marginTop: '0.35rem', fontStyle: 'italic' }
+          }, `factor ×${total}`)
+        ),
+
+        // ── Output area ───────────────────────────────────────────────────
+        React.createElement('div',
+          { style: { textAlign: 'center', minWidth: '195px' } },
+
+          React.createElement('div', {
+            style: {
+              fontSize: '0.6rem', color: '#8a8a82',
+              textTransform: 'uppercase', letterSpacing: '0.14em',
+              marginBottom: '0.55rem', fontWeight: '600'
+            }
+          }, '02 · DATASET EXPANDIDO'),
+
+          phase === 0 && React.createElement('div', {
+            style: {
+              border: '2px dashed #d8d8d0', height: '128px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#b8b8af', fontStyle: 'italic', fontSize: '0.7rem'
+            }
+          }, 'Esperando…'),
+
+          phase === 1 && React.createElement('div', null,
+            bw.slice(0, 3).map((d, i) =>
+              React.createElement('div', {
+                key: i,
+                className: 'anim-in',
+                style: {
+                  background: 'white',
+                  border: '1px solid #fff4e6',
+                  borderLeft: '3px solid #d97706',
+                  padding: '4px 10px', marginBottom: '3px',
+                  display: 'flex', justifyContent: 'space-between',
+                  animationDelay: `${i * 90}ms`,
+                  fontFamily: 'JetBrains Mono, monospace', fontSize: '0.7rem'
+                }
+              },
+                React.createElement('span', { style: { color: '#92400e', fontWeight: '700' } }, d),
+                React.createElement('span', { style: { color: '#b8b8af' } }, 'tp:[01/09→05/09] · 0.15')
+              )
+            ),
+            React.createElement('div', {
+              style: { color: '#92400e', fontSize: '0.62rem', marginTop: '0.35rem', fontStyle: 'italic' }
+            }, `… ×${tp.length} fechas tp pendientes`)
+          ),
+
+          phase === 2 && React.createElement('div',
+            { style: { maxHeight: '135px', overflowY: 'auto', paddingRight: '4px' } },
+            bw.flatMap((b, i) => tp.map((p, j) =>
+              React.createElement('div', {
+                key: `${i}${j}`,
+                className: 'anim-in',
+                style: {
+                  background: 'white',
+                  border: '1px solid #ffe3e3',
+                  borderLeft: '3px solid #991b1b',
+                  padding: '2.5px 7px', marginBottom: '1.5px',
+                  display: 'flex', gap: '8px',
+                  animationDelay: `${(i * 5 + j) * 30}ms`,
+                  fontFamily: 'JetBrains Mono, monospace', fontSize: '0.66rem'
+                }
+              },
+                React.createElement('span', { style: { color: '#991b1b', fontWeight: '700' } }, b),
+                React.createElement('span', { style: { color: '#c92a2a' } }, p),
+                React.createElement('span', { style: { color: '#b8b8af' } }, '0.15')
+              )
+            ))
+          ),
+
+          phase === 3 && React.createElement('div', null,
+            React.createElement('div', {
+              style: {
+                background: '#0a0a0a', color: 'white',
+                padding: '1rem 0.7rem', textAlign: 'center',
+                fontFamily: 'JetBrains Mono, monospace'
+              }
+            },
+              React.createElement('div', {
+                style: { fontSize: '1.7rem', fontWeight: '900', lineHeight: '1.1' }
+              }, `${total}`),
+              React.createElement('div', {
+                style: { fontSize: '0.6rem', letterSpacing: '0.12em', marginTop: '4px', color: '#b8b8af' }
+              }, 'FILAS POR OFERTA'),
+              React.createElement('div', {
+                style: { fontSize: '0.55rem', marginTop: '8px', color: '#8a8a82', fontStyle: 'italic' }
+              }, 'O(d₁ · d₂) — cuadrático en duración')
+            )
+          ),
+
+          (phase === 2 || phase === 3) && React.createElement('div', {
+            style: {
+              marginTop: '0.55rem',
+              background: '#ffe3e3', border: '1px solid #ff8787',
+              padding: '0.32rem 0.7rem', fontSize: '0.62rem',
+              color: '#991b1b', fontWeight: '700',
+              letterSpacing: '0.04em'
+            }
+          }, `${total} filas — factor ×${total}`)
+        )
+      ),
+
+      // ── Phase dots ─────────────────────────────────────────────────────
+      React.createElement('div', {
+        style: { display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '1.1rem' }
+      },
+        ...[0, 1, 2, 3].map(i =>
+          React.createElement('span', {
+            key: `dot${i}`,
+            style: {
+              display: 'inline-block', width: '7px', height: '7px',
+              borderRadius: '50%',
+              background: i === phase ? '#0a0a0a' : '#d8d8d0',
+              transition: 'background 0.3s'
+            }
+          })
+        )
+      ),
+
+      // ── Scale stats (always visible) ───────────────────────────────────
+      React.createElement('div',
+        { style: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.85rem', marginTop: '1.4rem' } },
+        [
+          { lbl: 'n ofertas',    v: '10.000',    sub: 'catálogo de referencia',  c: '#1e3a8a' },
+          { lbl: 'd₁ × d₂',      v: '120 × 120', sub: 'ventana media en días',   c: '#d97706' },
+          { lbl: 'filas en RAM', v: '144 M',     sub: 'O(n · d₁ · d₂) ≈ 9.8 GB', c: '#991b1b' },
+        ].map(({ lbl, v, sub, c }) =>
+          React.createElement('div', {
+            key: lbl,
+            style: {
+              background: 'white', border: '1px solid #ebeae3',
+              borderTop: `3px solid ${c}`, padding: '0.7rem 0.85rem',
+              transition: 'transform 0.25s, box-shadow 0.25s'
+            }
+          },
+            React.createElement('div', {
+              style: {
+                fontSize: '0.58rem', textTransform: 'uppercase',
+                color: '#8a8a82', letterSpacing: '0.1em', fontWeight: '600'
+              }
+            }, lbl),
+            React.createElement('div', {
+              style: { fontSize: '1.18rem', fontWeight: '900', color: c, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '-0.02em' }
+            }, v),
+            React.createElement('div', {
+              style: { fontSize: '0.6rem', color: '#8a8a82', fontStyle: 'italic', fontFamily: 'EB Garamond, serif' }
+            }, sub)
+          )
+        )
+      )
+    )
+  );
+};
+</script>
+<script>// ── Fig 4 — Árbol de Intervalos Aumentado: animación de consulta con poda ──
+// Vista doble: barra numérica arriba muestra los intervalos en el eje;
+// árbol BST abajo muestra la estructura con la propiedad max aumentada.
+// La animación recorre el árbol respondiendo a la consulta q = [10, 20].
+
+const Fig4 = () => {
+  const [step, setStep] = useState(-1);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(() => setStep(s => (s >= 9 ? -1 : s + 1)), 1100);
+    return () => clearInterval(t);
+  }, [paused]);
+
+  // ── Tree nodes (BST ordered by interval lower endpoint l) ────────────────
+  const nodes = [
+    { id: 0, x: 230, y: 250, iv: [8,  22], m: 28 },
+    { id: 1, x: 120, y: 315, iv: [3,  12], m: 18 },
+    { id: 2, x: 340, y: 315, iv: [16, 28], m: 28 },
+    { id: 3, x: 58,  y: 380, iv: [1,  6],  m: 6  },
+    { id: 4, x: 182, y: 380, iv: [9,  18], m: 18 },
+    { id: 5, x: 280, y: 380, iv: [14, 22], m: 22 },
+    { id: 6, x: 402, y: 380, iv: [20, 28], m: 28 },
+  ];
+  const edges = [[0,1],[0,2],[1,3],[1,4],[2,5],[2,6]];
+
+  // Query q = [10, 20]
+  const Q = [10, 20];
+  const visitSeq = [0, 1, 4, 2, 5];   // Order in which nodes are visited
+  const pruned   = [3, 6];
+  const hits     = [4, 5];
+
+  const nodeState = id => {
+    if (step < 0) return 'idle';
+    const vi = visitSeq.indexOf(id);
+    const visited = vi !== -1 && vi <= step;
+    if (hits.includes(id) && visited) return 'hit';
+    if (pruned.includes(id) && step >= visitSeq.length) return 'pruned';
+    if (visited) return 'visited';
+    return 'idle';
+  };
+
+  // State color palette (refined)
+  const S = {
+    idle:    { fill: '#fafaf7', stroke: '#d8d8d0', sw: 1,   tc: '#4a4a45' },
+    visited: { fill: '#dbe4ff', stroke: '#1e3a8a', sw: 2.2, tc: '#1e3a8a' },
+    hit:     { fill: '#d3f9d8', stroke: '#15803d', sw: 2.5, tc: '#15803d' },
+    pruned:  { fill: '#ffe3e3', stroke: '#991b1b', sw: 1.8, tc: '#991b1b' },
+  };
+
+  const W = 460, SVGH = 458;
+  const NLX0 = 36, NLX1 = 430, NLMIN = 0, NLMAX = 30;
+  const NLY = 110;
+
+  const nlX = v => NLX0 + ((v - NLMIN) / (NLMAX - NLMIN)) * (NLX1 - NLX0);
+  const barRowY = i => NLY - 14 - i * 12;
+
+  const idleColors = ['#5f3dc4','#1e3a8a','#5f3dc4','#8a8a82','#15803d','#92400e','#5f3dc4'];
+
+  const stateColor = (id, st) => {
+    if (st === 'hit')    return '#15803d';
+    if (st === 'pruned') return '#991b1b';
+    if (st === 'visited') return '#1e3a8a';
+    return idleColors[id];
+  };
+
+  const stepLabels = [
+    'Visito raíz [8,22]  ·  max=28 ≥ q_l=10  →  descender por ambos lados',
+    'Visito izq [3,12]   ·  max=18 ≥ 10      →  descender por ambos lados',
+    '[9,18] solapa con [10,20]  ✓  hit',
+    'Vuelvo a la raíz  →  visito der [16,28]  →  descender',
+    '[14,22] solapa con [10,20]  ✓  hit',
+    '[1,6]:  max = 6 < q_l = 10  →  poda completa del subárbol  ✗',
+    '[20,28]:  l = 20 ≤ q_h = 20  →  verificar nodo',
+    'Búsqueda completa  →  k = 2 resultados (logarítmico)',
+    'Búsqueda completa  →  k = 2 resultados (logarítmico)',
+    'Búsqueda completa  →  k = 2 resultados (logarítmico)',
+  ];
+
+  const descText = step >= 0
+    ? stepLabels[Math.min(step, stepLabels.length - 1)]
+    : 'q = [10, 20]  ·  click para pausar / reanudar';
+
+  return React.createElement('div',
+    {
+      style: { cursor: 'pointer', userSelect: 'none' },
+      onClick: () => setPaused(p => !p),
+      title: 'Click para pausar / reanudar',
+    },
+    React.createElement('svg',
+      { width: '100%', viewBox: `0 0 ${W} ${SVGH}`, style: { fontFamily: 'JetBrains Mono, monospace', overflow: 'visible' } },
+
+      // ── Section header: number line ─────────────────────────────────────
+      React.createElement('text', {
+        x: NLX0, y: 14, fontSize: '7.5', fontWeight: '700',
+        fill: '#8a8a82', letterSpacing: '0.14em'
+      }, 'INTERVALOS ALMACENADOS · EJE NUMÉRICO'),
+
+      // Interval bars
+      ...nodes.map((n, i) => {
+        const st = nodeState(n.id);
+        const c  = stateColor(n.id, st);
+        const y  = barRowY(i);
+        const x1 = nlX(n.iv[0]), x2 = nlX(n.iv[1]);
+        const isActive = st !== 'idle';
+        const sw = isActive ? 5 : 2.5;
+        return React.createElement('g', { key: `iv${i}` },
+          React.createElement('line', {
+            x1, y1: y, x2, y2: y,
+            stroke: c, strokeWidth: sw, strokeLinecap: 'round',
+            opacity: isActive ? 1 : 0.42,
+            style: { transition: 'stroke 0.3s, stroke-width 0.25s, opacity 0.3s' }
+          }),
+          React.createElement('circle', {
+            cx: x1, cy: y, r: isActive ? 4 : 2.5,
+            fill: c, opacity: isActive ? 1 : 0.42,
+            style: { transition: 'r 0.25s, opacity 0.3s' }
+          }),
+          React.createElement('circle', {
+            cx: x2, cy: y, r: isActive ? 4 : 2.5,
+            fill: c, opacity: isActive ? 1 : 0.42,
+            style: { transition: 'r 0.25s, opacity 0.3s' }
+          }),
+          React.createElement('text', {
+            x: NLX0 - 5, y: y + 3.2,
+            textAnchor: 'end', fontSize: '6.5',
+            fill: c, opacity: isActive ? 1 : 0.5,
+            fontWeight: '600'
+          }, `n${i}`),
+        );
+      }),
+
+      // Number line axis
+      React.createElement('line', {
+        x1: NLX0, y1: NLY, x2: NLX1, y2: NLY,
+        stroke: '#4a4a45', strokeWidth: '1.5'
+      }),
+      ...[0, 5, 10, 15, 20, 25, 30].map(v =>
+        React.createElement('g', { key: `tick${v}` },
+          React.createElement('line', {
+            x1: nlX(v), y1: NLY - 3, x2: nlX(v), y2: NLY + 5,
+            stroke: '#4a4a45', strokeWidth: '1'
+          }),
+          React.createElement('text', {
+            x: nlX(v), y: NLY + 14,
+            textAnchor: 'middle', fontSize: '7.5', fill: '#8a8a82'
+          }, v)
+        )
+      ),
+
+      // Query range highlight
+      step >= 0 && React.createElement('g', null,
+        React.createElement('rect', {
+          x: nlX(Q[0]), y: 18,
+          width: nlX(Q[1]) - nlX(Q[0]),
+          height: NLY - 18,
+          fill: '#dbe4ff', fillOpacity: 0.35,
+          stroke: '#1e3a8a', strokeWidth: '1.3', strokeDasharray: '5,3',
+          rx: 2
+        }),
+        React.createElement('text', {
+          x: (nlX(Q[0]) + nlX(Q[1])) / 2, y: NLY + 26,
+          textAnchor: 'middle', fontSize: '7.5',
+          fill: '#1e3a8a', fontWeight: '700'
+        }, 'q = [10, 20]')
+      ),
+
+      // Divider
+      React.createElement('line', {
+        x1: 0, y1: 142, x2: W, y2: 142,
+        stroke: '#ebeae3', strokeWidth: '1', strokeDasharray: '4,4'
+      }),
+      React.createElement('text', {
+        x: NLX0, y: 158, fontSize: '7.5', fontWeight: '700',
+        fill: '#8a8a82', letterSpacing: '0.14em'
+      }, 'BST AUMENTADO · ORDENADO POR EXTREMO INFERIOR'),
+
+      // BST edges
+      ...edges.map(([a, b]) => {
+        const na = nodes[a], nb = nodes[b];
+        return React.createElement('line', {
+          key: `e${a}${b}`,
+          x1: na.x, y1: na.y + 26,
+          x2: nb.x, y2: nb.y - 26,
+          stroke: '#d8d8d0', strokeWidth: '1.2'
+        });
+      }),
+
+      // BST nodes
+      ...nodes.map(n => {
+        const st = nodeState(n.id);
+        const { fill, stroke, sw, tc } = S[st];
+        const isHit    = st === 'hit';
+        const isPruned = st === 'pruned';
+        return React.createElement('g', { key: `n${n.id}` },
+          React.createElement('rect', {
+            x: n.x - 46, y: n.y - 26,
+            width: 92, height: 52, rx: 4,
+            fill, stroke, strokeWidth: sw,
+            style: {
+              transition: 'fill 0.35s, stroke 0.3s, stroke-width 0.2s',
+              filter: isHit ? 'drop-shadow(0 0 6px rgba(21,128,61,0.45))' : 'none'
+            }
+          }),
+          React.createElement('text', {
+            x: n.x, y: n.y - 8, textAnchor: 'middle',
+            fontSize: '10.5', fontWeight: '700', fill: tc
+          }, `[${n.iv[0]}, ${n.iv[1]}]`),
+          React.createElement('text', {
+            x: n.x, y: n.y + 6, textAnchor: 'middle',
+            fontSize: '8', fill: '#8a8a82'
+          }, `max = ${n.m}`),
+          (isHit || isPruned) && React.createElement('text', {
+            x: n.x, y: n.y + 20, textAnchor: 'middle',
+            fontSize: '8.5', fontWeight: '700',
+            fill: isHit ? '#15803d' : '#991b1b'
+          }, isHit ? '✓ hit' : '✗ poda'),
+        );
+      }),
+
+      // Legend
+      React.createElement('rect', {
+        x: W - 122, y: 156,
+        width: 118, height: 64, rx: 2,
+        fill: 'white', stroke: '#d8d8d0', strokeWidth: '1'
+      }),
+      ...[
+        ['#dbe4ff','#1e3a8a','visitado'],
+        ['#d3f9d8','#15803d','match (hit)'],
+        ['#ffe3e3','#991b1b','podado (max < q_l)']
+      ].map(([f, s, l], i) =>
+        React.createElement('g', {
+          key: l,
+          transform: `translate(${W - 116}, ${164 + i * 18})`
+        },
+          React.createElement('rect', {
+            width: 12, height: 10,
+            fill: f, stroke: s, strokeWidth: '1.3', rx: 1
+          }),
+          React.createElement('text', {
+            x: 16, y: 9, fontSize: '7.5', fill: '#1f1f1c'
+          }, l)
+        )
+      ),
+
+      // Step description bar
+      React.createElement('rect', {
+        x: 0, y: SVGH - 24,
+        width: W, height: 24, rx: 2,
+        fill: '#f5f4ee', stroke: '#ebeae3'
+      }),
+      React.createElement('text', {
+        x: 12, y: SVGH - 8, fontSize: '8',
+        fill: '#1f1f1c', fontStyle: 'italic',
+        fontFamily: 'JetBrains Mono, monospace'
+      }, descText),
+
+      // Pause overlay
+      paused && React.createElement('g', null,
+        React.createElement('rect', {
+          x: W / 2 - 36, y: 158, width: 72, height: 18, rx: 2,
+          fill: '#0a0a0a', fillOpacity: 0.85
+        }),
+        React.createElement('text', {
+          x: W / 2, y: 170, textAnchor: 'middle',
+          fontSize: '8', fill: 'white', letterSpacing: '0.1em'
+        }, '⏸ PAUSADO')
+      )
+    )
+  );
+};
+</script>
+<script>// ── Fig 5 — Árbol de Intervalos 2D Anidado: BW (exterior) → TP (interior) ──
+// Una consulta rectangular [bw_l, bw_h] × [tp_l, tp_h] procede en dos fases:
+// (1) el árbol BW localiza nodos candidatos, (2) cada candidato lanza una
+// sub-consulta en su árbol TP interior. Coste: O(log²n + k).
+
+const Fig5 = () => {
+  const [step, setStep] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(() => setStep(s => (s + 1) % 4), 2500);
+    return () => clearInterval(t);
+  }, [paused]);
+
+  const phases = [
+    { desc: 'Fase 1 · Consulta en eje BW: localizar nodos candidatos', hl: 'bw' },
+    { desc: 'Fase 2 · Candidato BW[4–7]: sub-consulta en eje TP',      hl: 'tp1' },
+    { desc: 'Fase 3 · Candidato BW[8–11]: sub-consulta en eje TP',     hl: 'tp2' },
+    { desc: 'Fase 4 · Unión de resultados  →  O(log²n + k)',           hl: 'done' },
+  ];
+
+  const hl = phases[step].hl;
+
+  // ── BW tree (left) ───────────────────────────────────────────────────────
+  const NW = 56, NH = 28;
+
+  const bwNodes = [
+    { id: 0, x: 130, y: 36,  lbl: 'BW [1–15]' },
+    { id: 1, x: 65,  y: 92,  lbl: 'BW [1–7]' },
+    { id: 2, x: 195, y: 92,  lbl: 'BW [8–15]' },
+    { id: 3, x: 22,  y: 150, lbl: 'BW [1–3]' },
+    { id: 4, x: 90,  y: 150, lbl: 'BW [4–7]' },
+    { id: 5, x: 162, y: 150, lbl: 'BW [8–11]' },
+    { id: 6, x: 234, y: 150, lbl: 'BW [12–15]' },
+  ];
+
+  const bwEdges = [[0,1],[0,2],[1,3],[1,4],[2,5],[2,6]];
+
+  const bwActive = {
+    bw:   [0, 1, 2, 4, 5],
+    tp1:  [4],
+    tp2:  [5],
+    done: [4, 5],
+  }[hl] || [];
+
+  // ── TP sub-trees (right) ─────────────────────────────────────────────────
+  const TPW = 54, TPH = 26;
+
+  const tp1Nodes = [
+    { x: 400, y: 46,  lbl: 'TP [1–16]' },
+    { x: 355, y: 96,  lbl: 'TP [1–8]' },
+    { x: 445, y: 96,  lbl: 'TP [9–16]' },
+  ];
+  const tp1Edges = [[400,46, 355,96], [400,46, 445,96]];
+
+  const tp2Nodes = [
+    { x: 400, y: 164, lbl: 'TP [1–12]' },
+    { x: 355, y: 214, lbl: 'TP [1–6]' },
+    { x: 445, y: 214, lbl: 'TP [7–12]' },
+  ];
+  const tp2Edges = [[400,164, 355,214], [400,164, 445,214]];
+
+  const W = 490, H = 270;
+
+  // BW node renderer
+  const bwNode = n => {
+    const active = bwActive.includes(n.id);
+    return React.createElement('g', { key: `bw${n.id}` },
+      React.createElement('rect', {
+        x: n.x - NW/2, y: n.y - NH/2,
+        width: NW, height: NH, rx: 3,
+        fill: active ? '#dbe4ff' : '#fafaf7',
+        stroke: active ? '#1e3a8a' : '#d8d8d0',
+        strokeWidth: active ? 2 : 1,
+        style: { transition: 'fill 0.4s, stroke 0.4s, stroke-width 0.4s' }
+      }),
+      React.createElement('text', {
+        x: n.x, y: n.y + 4, textAnchor: 'middle',
+        fontSize: '7.5', fontWeight: active ? '700' : '500',
+        fill: active ? '#1e3a8a' : '#1f1f1c',
+        style: { transition: 'fill 0.4s' }
+      }, n.lbl)
+    );
+  };
+
+  // TP node renderer
+  const tpNode = (n, prefix) =>
+    React.createElement('g', { key: `${prefix}${n.lbl}` },
+      React.createElement('rect', {
+        x: n.x - TPW/2, y: n.y - TPH/2,
+        width: TPW, height: TPH, rx: 3,
+        fill: '#d3f9d8', stroke: '#15803d', strokeWidth: '1.5'
+      }),
+      React.createElement('text', {
+        x: n.x, y: n.y + 3.5, textAnchor: 'middle',
+        fontSize: '7.5', fill: '#15803d', fontWeight: '600'
+      }, n.lbl)
+    );
+
+  const tpEdge = ([x1, y1, x2, y2], i, prefix) =>
+    React.createElement('line', {
+      key: `${prefix}e${i}`,
+      x1, y1: y1 + TPH/2,
+      x2, y2: y2 - TPH/2,
+      stroke: '#a3e9a4', strokeWidth: '1.2'
+    });
+
+  return React.createElement('div',
+    { onClick: () => setPaused(p => !p), style: { cursor: 'pointer', userSelect: 'none' }, title: 'Click para pausar / reanudar' },
+
+    React.createElement('div', {
+      style: {
+        fontSize: '0.68rem', fontFamily: 'JetBrains Mono, monospace',
+        color: '#1f1f1c', marginBottom: '0.85rem',
+        background: '#f5f4ee', padding: '0.5rem 0.95rem',
+        borderLeft: '3px solid #0a0a0a', letterSpacing: '0.04em'
+      }
+    }, phases[step].desc),
+
+    React.createElement('svg',
+      { width: '100%', viewBox: `0 0 ${W} ${H}`, style: { fontFamily: 'JetBrains Mono, monospace', overflow: 'visible' } },
+
+      // BW label
+      React.createElement('text', {
+        x: 6, y: 14, fontSize: '8.5', fontWeight: '700',
+        fill: '#1e3a8a', letterSpacing: '0.06em'
+      }, 'ÁRBOL BW · EXTERIOR'),
+
+      // BW edges
+      ...bwEdges.map(([a, b]) => {
+        const na = bwNodes[a], nb = bwNodes[b];
+        return React.createElement('line', {
+          key: `be${a}${b}`,
+          x1: na.x, y1: na.y + NH/2,
+          x2: nb.x, y2: nb.y - NH/2,
+          stroke: '#e8e7df', strokeWidth: '1.4'
+        });
+      }),
+
+      // BW nodes
+      ...bwNodes.map(bwNode),
+
+      // Connector arrow BW → TP
+      step >= 1 && React.createElement('g', null,
+        React.createElement('defs', null,
+          React.createElement('marker', {
+            id: 'arrow5', viewBox: '0 0 10 10',
+            refX: 9, refY: 5, markerWidth: 5, markerHeight: 5, orient: 'auto'
+          },
+            React.createElement('path', { d: 'M0,0 L10,5 L0,10 Z', fill: '#4a4a45' })
+          )
+        ),
+        React.createElement('line', {
+          x1: 270, y1: 132, x2: 310, y2: 132,
+          stroke: '#4a4a45', strokeWidth: '2',
+          markerEnd: 'url(#arrow5)', strokeDasharray: '4,3'
+        }),
+        React.createElement('text', {
+          x: 290, y: 124, textAnchor: 'middle',
+          fontSize: '7', fill: '#4a4a45', fontStyle: 'italic'
+        }, 'sub-query')
+      ),
+
+      // TP sub-tree 1
+      (hl === 'tp1' || hl === 'done') && React.createElement('g', { className: 'svg-fade-in' },
+        React.createElement('text', {
+          x: 400, y: 26, textAnchor: 'middle',
+          fontSize: '8', fontWeight: '700', fill: '#15803d',
+          letterSpacing: '0.04em'
+        }, 'SUB-ÁRBOL TP · BW[4–7]'),
+        ...tp1Edges.map((e, i) => tpEdge(e, i, 'tp1')),
+        ...tp1Nodes.map(n => tpNode(n, 'tp1'))
+      ),
+
+      // TP sub-tree 2
+      (hl === 'tp2' || hl === 'done') && React.createElement('g', { className: 'svg-fade-in' },
+        React.createElement('text', {
+          x: 400, y: 146, textAnchor: 'middle',
+          fontSize: '8', fontWeight: '700', fill: '#15803d',
+          letterSpacing: '0.04em'
+        }, 'SUB-ÁRBOL TP · BW[8–11]'),
+        ...tp2Edges.map((e, i) => tpEdge(e, i, 'tp2')),
+        ...tp2Nodes.map(n => tpNode(n, 'tp2'))
+      ),
+
+      // Divider between TP trees
+      hl === 'done' && React.createElement('line', {
+        x1: 330, y1: 132, x2: 470, y2: 132,
+        stroke: '#e8e7df', strokeWidth: '0.8', strokeDasharray: '3,3'
+      }),
+
+      // Result badge
+      hl === 'done' && React.createElement('g', { className: 'svg-fade-in' },
+        React.createElement('rect', {
+          x: W/2 - 100, y: H - 38,
+          width: 200, height: 24, rx: 3,
+          fill: '#0a0a0a'
+        }),
+        React.createElement('text', {
+          x: W/2, y: H - 22, textAnchor: 'middle',
+          fontSize: '9', fontWeight: '700', fill: 'white',
+          letterSpacing: '0.04em'
+        }, 'k coincidencias  ·  O(log²n + k)')
+      ),
+
+      // Step dots
+      ...[0, 1, 2, 3].map(i =>
+        React.createElement('circle', {
+          key: `sd5${i}`,
+          cx: W/2 - 21 + i * 14, cy: H - 6, r: 3.5,
+          fill: i === step ? '#0a0a0a' : '#d8d8d0',
+          style: { transition: 'fill 0.3s' }
+        })
+      ),
+
+      // TP section label
+      step >= 1 && React.createElement('text', {
+        x: 326, y: 14, fontSize: '8', fontWeight: '700',
+        fill: '#15803d', letterSpacing: '0.06em'
+      }, 'EJE TP · INTERIOR'),
+
+      // Pause overlay
+      paused && React.createElement('g', null,
+        React.createElement('rect', {
+          x: W/2 - 36, y: H/2 - 10, width: 72, height: 18, rx: 2,
+          fill: '#0a0a0a', fillOpacity: 0.85
+        }),
+        React.createElement('text', {
+          x: W/2, y: H/2 + 2, textAnchor: 'middle',
+          fontSize: '8', fill: 'white', letterSpacing: '0.1em'
+        }, '⏸ PAUSADO')
+      )
+    )
+  );
+};
+</script>
+<script>// ── Fig 6 — Comparativa de complejidad (barras animadas) ────────────────────
+// Barras normalizadas sobre el modelo naive: muestra el factor de reducción
+// en espacio y tiempo del Árbol de Intervalos 2D vs. el modelo naive.
+
+const Fig6 = () => {
+  const [ref, visible] = useInView(0.2);
+  const [go, setGo] = useState(false);
+
+  useEffect(() => {
+    if (visible) setTimeout(() => setGo(true), 200);
+  }, [visible]);
+
+  const rows = [
+    { label: 'Espacio · Naive',          pct: 100, note: 'O(n · d₁ · d₂)', c: '#991b1b' },
+    { label: 'Espacio · Interval Tree',  pct: 4,   note: 'O(n log n)',     c: '#15803d' },
+    { label: 'Consulta · Naive',         pct: 100, note: 'O(n · d)',       c: '#991b1b' },
+    { label: 'Consulta · Interval Tree', pct: 5,   note: 'O(log²n + k)',   c: '#15803d' },
+    { label: 'Construcción · Tree',      pct: 18,  note: 'O(n log²n)',     c: '#1e3a8a' },
+  ];
+
+  return React.createElement('div',
+    { ref, style: { fontFamily: 'JetBrains Mono, monospace', fontSize: '0.74rem' } },
+
+    ...rows.map((r, i) =>
+      React.createElement('div', { key: r.label, style: { marginBottom: '0.85rem' } },
+
+        React.createElement('div', {
+          style: { display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }
+        },
+          React.createElement('span', {
+            style: { color: '#1f1f1c', fontWeight: r.pct < 20 ? '700' : '500', letterSpacing: '0.02em' }
+          }, r.label),
+          React.createElement('span', {
+            style: { color: '#8a8a82', fontStyle: 'italic', fontFamily: 'EB Garamond, serif', fontSize: '0.84rem' }
+          }, r.note)
+        ),
+
+        React.createElement('div', {
+          style: { height: '22px', background: '#ebeae3', borderRadius: '2px', overflow: 'hidden', position: 'relative' }
+        },
+          React.createElement('div', {
+            style: {
+              height: '100%', background: r.c,
+              borderRadius: '2px',
+              width: go ? `${r.pct}%` : '0%',
+              transition: `width 1.4s cubic-bezier(0.22, 1, 0.36, 1) ${i * 140}ms`,
+              display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+              paddingRight: '7px', overflow: 'hidden',
+              boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.1)'
+            }
+          },
+            go && r.pct > 15 && React.createElement('span', {
+              style: { color: 'white', fontSize: '0.62rem', fontWeight: '700', whiteSpace: 'nowrap', letterSpacing: '0.04em' }
+            }, `${r.pct}%`)
+          )
+        )
+      )
+    ),
+
+    // Stat row: RAM comparison
+    React.createElement('div', {
+      style: { marginTop: '1.2rem', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.7rem' }
+    },
+      [
+        { lbl: 'RAM · Naive',         v: '~9.8 GB', c: '#991b1b' },
+        { lbl: 'RAM · Interval Tree', v: '~85 MB',  c: '#15803d' },
+        { lbl: 'Reducción',           v: '−99.1 %', c: '#0a0a0a' },
+      ].map(({ lbl, v, c }) =>
+        React.createElement('div', {
+          key: lbl,
+          style: {
+            border: `2px solid ${c}`, padding: '0.55rem 0.8rem',
+            textAlign: 'center', background: 'white',
+            transition: 'transform 0.25s, box-shadow 0.25s'
+          }
+        },
+          React.createElement('div', {
+            style: {
+              fontSize: '0.58rem', color: '#8a8a82',
+              textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600'
+            }
+          }, lbl),
+          React.createElement('div', {
+            style: { fontSize: '1.18rem', fontWeight: '900', color: c, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '-0.02em' }
+          }, v)
+        )
+      )
+    ),
+
+    React.createElement('p', {
+      style: {
+        fontSize: '0.62rem', color: '#8a8a82', marginTop: '0.85rem',
+        fontStyle: 'italic', fontFamily: 'EB Garamond, serif'
+      }
+    }, 'Escenario de referencia: n = 10.000 ofertas, d₁ = d₂ = 120 días, k ≈ 5 hits/consulta. Barras normalizadas sobre el modelo naive.')
+  );
+};
+// ── Fig 7 — Tanques de memoria: visualización a escala ─────────────────────
+// Comparación visual del consumo de RAM entre los dos modelos.
+
+const Fig7 = () => {
+  const [ref, visible] = useInView(0.2);
+  const [go, setGo] = useState(false);
+
+  useEffect(() => {
+    if (visible) setTimeout(() => setGo(true), 400);
+  }, [visible]);
+
+  const TANK_H = 160;
+
+  const Tank = ({ label, ram, fillPct, color, time, model }) =>
+    React.createElement('div',
+      { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '7px', flex: '1' } },
+
+      React.createElement('div', {
+        style: { fontFamily: 'JetBrains Mono, monospace', fontSize: '0.85rem', fontWeight: '900', color, lineHeight: 1 }
+      }, ram),
+
+      React.createElement('div', {
+        style: {
+          width: '90px', height: `${TANK_H}px`,
+          border: `2.5px solid ${color}`,
+          borderRadius: '4px',
+          position: 'relative',
+          background: '#fafaf7',
+          overflow: 'hidden',
+          boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.04)'
+        }
+      },
+        // Horizontal grid lines
+        ...[0.25, 0.5, 0.75].map(f =>
+          React.createElement('div', {
+            key: f,
+            style: {
+              position: 'absolute',
+              left: 0, right: 0,
+              top: `${(1 - f) * 100}%`,
+              borderTop: '1px dashed #ebeae3'
+            }
+          })
+        ),
+        // Fill
+        React.createElement('div', {
+          style: {
+            position: 'absolute',
+            bottom: 0, left: 0, right: 0,
+            height: go ? `${fillPct}%` : '0%',
+            background: `linear-gradient(180deg, ${color} 0%, ${color}dd 100%)`,
+            opacity: 0.78,
+            transition: `height 2s cubic-bezier(0.22, 1, 0.36, 1)`,
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+            paddingTop: '7px', overflow: 'hidden',
+            boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.1)'
+          }
+        },
+          go && fillPct > 14 && React.createElement('span', {
+            style: {
+              color: 'white', fontFamily: 'JetBrains Mono, monospace',
+              fontSize: '0.65rem', fontWeight: '700',
+              textAlign: 'center', lineHeight: 1.3
+            }
+          }, ram)
+        )
+      ),
+
+      React.createElement('div', {
+        style: {
+          fontFamily: 'JetBrains Mono, monospace',
+          fontSize: '0.75rem', color: '#1f1f1c',
+          textAlign: 'center', fontWeight: '700', letterSpacing: '0.04em'
+        }
+      }, label),
+      React.createElement('div', {
+        style: {
+          fontFamily: 'EB Garamond, serif', fontStyle: 'italic',
+          fontSize: '0.7rem', color: '#8a8a82', textAlign: 'center'
+        }
+      }, model),
+      React.createElement('div', {
+        style: {
+          fontFamily: 'JetBrains Mono, monospace',
+          fontSize: '0.65rem', color: '#4a4a45', textAlign: 'center',
+          marginTop: '2px'
+        }
+      }, time)
+    );
+
+  return React.createElement('div', { ref },
+        }
+      }, time)
+    );
+
+  return React.createElement('div', { ref },
+
+    React.createElement('div', {
+      style: { display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '3.5rem', padding: '0.5rem 0 0.85rem' }
+    },
+      React.createElement(Tank, {
+        label: 'Naive', model: 'O(n · d₁ · d₂)',
+        ram: '9.8 GB', fillPct: 92, color: '#991b1b', time: '~ 18 min'
+      }),
+
+      React.createElement('div', {
+        style: {
+          fontFamily: 'JetBrains Mono, monospace',
+          fontSize: '1.4rem', fontWeight: '900',
+          color: '#d8d8d0', alignSelf: 'center',
+          paddingBottom: `${TANK_H * 0.32}px`
+        }
+      }, 'vs'),
+
+      React.createElement(Tank, {
+        label: 'Interval Tree', model: 'O(n log n)',
+        ram: '85 MB', fillPct: 0.8, color: '#15803d', time: '< 30 seg'
+      })
+    ),
+
+    React.createElement('div', {
+      style: {
+        display: 'flex', justifyContent: 'center', marginTop: '0.4rem',
+        opacity: go ? 1 : 0, transition: 'opacity 0.7s 2s'
+      }
+    },
+      React.createElement('div', {
+        style: {
+          background: '#0a0a0a', color: 'white',
+          fontFamily: 'JetBrains Mono, monospace',
+          fontSize: '0.78rem', fontWeight: '700',
+          padding: '5px 18px', borderRadius: '2px',
+          letterSpacing: '0.06em'
+        }
+      }, '−99.1 % de RAM')
+    )
+  );
+};
+</script>
+<script>// ── FigDecompose — Solape 2D = solape en BW × solape en TP ────────────────
+// Muestra dos rectángulos (origen y destino) en el plano BW × TP, proyecta sus
+// intervalos sobre cada eje y resalta la intersección como producto cartesiano
+// de los dos solapes 1D. Estático y denso en información.
+
+const FigDecompose = () => {
+  const W = 480, H = 310;
+  const pad = { l: 78, b: 72, r: 26, t: 26 };
+  const iW = W - pad.l - pad.r;
+  const iH = H - pad.t - pad.b;
+  const Dx = 24, Dy = 24;
+  const px = v => pad.l + (v / Dx) * iW;
+  const py = v => H - pad.b - (v / Dy) * iH;
+
+  // Rectángulo origen (sistema interno) y destino (sistema del colaborador)
+  const Rs = { bw: [3, 14], tp: [8, 20], c: '#1e3a8a', soft: '#dbe4ff', lbl: 'R₁ · Origen' };
+  const Rd = { bw: [9, 21], tp: [4, 17], c: '#15803d', soft: '#d3f9d8', lbl: 'R₂ · Destino' };
+
+  // Solape 1D por eje
+  const bwOv = [Math.max(Rs.bw[0], Rd.bw[0]), Math.min(Rs.bw[1], Rd.bw[1])];
+  const tpOv = [Math.max(Rs.tp[0], Rd.tp[0]), Math.min(Rs.tp[1], Rd.tp[1])];
+
+  const rectOf = (R, opacity = 0.35) => React.createElement('rect', {
+    x: px(R.bw[0]), y: py(R.tp[1]),
+    width: px(R.bw[1]) - px(R.bw[0]),
+    height: py(R.tp[0]) - py(R.tp[1]),
+    fill: R.soft, stroke: R.c, strokeWidth: 1.8,
+    fillOpacity: opacity, rx: 2
+  });
+
+  const Axis = ({ vals, axis }) => axis === 'x'
+    ? vals.map(v => React.createElement('g', { key: `gx${v}` },
+        React.createElement('line', {
+          x1: px(v), y1: H - pad.b, x2: px(v), y2: H - pad.b + 4,
+          stroke: '#8a8a82', strokeWidth: 0.8
+        }),
+        React.createElement('text', {
+          x: px(v), y: H - pad.b + 13,
+          textAnchor: 'middle', fontSize: '7.5', fill: '#8a8a82',
+          fontFamily: 'JetBrains Mono, monospace'
+        }, v)
+      ))
+    : vals.map(v => React.createElement('g', { key: `gy${v}` },
+        React.createElement('line', {
+          x1: pad.l - 4, y1: py(v), x2: pad.l, y2: py(v),
+          stroke: '#8a8a82', strokeWidth: 0.8
+        }),
+        React.createElement('text', {
+          x: pad.l - 7, y: py(v) + 3,
+          textAnchor: 'end', fontSize: '7.5', fill: '#8a8a82',
+          fontFamily: 'JetBrains Mono, monospace'
+        }, v)
+      ));
+
+  // Proyección 1D sobre eje BW (en la parte inferior)
+  const projY = H - pad.b + 28;
+  const projTY = pad.l - 28;
+
+  return React.createElement('svg', {
+    width: '100%', viewBox: `0 0 ${W} ${H + 30}`,
+    style: { overflow: 'visible', fontFamily: 'JetBrains Mono, monospace' }
+  },
+    // Plane bg
+    React.createElement('rect', {
+      x: pad.l, y: pad.t, width: iW, height: iH,
+      fill: '#fafaf7', stroke: '#ebeae3'
+    }),
+
+    // Grid
+    ...[0, 6, 12, 18, 24].flatMap(v => [
+      React.createElement('line', {
+        key: `gv${v}`, x1: px(v), y1: pad.t, x2: px(v), y2: H - pad.b,
+        stroke: '#ebeae3', strokeWidth: 0.8
+      }),
+      React.createElement('line', {
+        key: `gh${v}`, x1: pad.l, y1: py(v), x2: W - pad.r, y2: py(v),
+        stroke: '#ebeae3', strokeWidth: 0.8
+      })
+    ]),
+
+    // Ticks
+    ...Axis({ vals: [0, 6, 12, 18, 24], axis: 'x' }),
+    ...Axis({ vals: [0, 6, 12, 18, 24], axis: 'y' }),
+
+    // Axis labels
+    React.createElement('text', {
+      x: pad.l + iW / 2, y: H - pad.b + 32,
+      textAnchor: 'middle', fontSize: '8', fill: '#4a4a45',
+      letterSpacing: '0.1em', fontWeight: 600
+    }, 'BW (Booking Window)'),
+    React.createElement('text', {
+      x: 18, y: pad.t + iH / 2,
+      textAnchor: 'middle', fontSize: '8', fill: '#4a4a45',
+      letterSpacing: '0.1em', fontWeight: 600,
+      transform: `rotate(-90, 18, ${pad.t + iH / 2})`
+    }, 'TP (Travel Period)'),
+
+    // Rectangles
+    rectOf(Rs, 0.4),
+    rectOf(Rd, 0.4),
+
+    // Intersection (hatched)
+    React.createElement('defs', null,
+      React.createElement('pattern', {
+        id: 'hatch', x: 0, y: 0, width: 6, height: 6, patternUnits: 'userSpaceOnUse'
+      },
+        React.createElement('path', {
+          d: 'M 0,6 l 6,-6 M -1,1 l 2,-2 M 5,7 l 2,-2',
+          stroke: '#92400e', strokeWidth: 1
+        })
+      )
+    ),
+    React.createElement('rect', {
+      x: px(bwOv[0]), y: py(tpOv[1]),
+      width: px(bwOv[1]) - px(bwOv[0]),
+      height: py(tpOv[0]) - py(tpOv[1]),
+      fill: 'url(#hatch)', stroke: '#92400e', strokeWidth: 2, rx: 1.5
+    }),
+
+    // Rectangle labels
+    React.createElement('text', {
+      x: px(Rs.bw[0]) + 6, y: py(Rs.tp[1]) + 12,
+      fontSize: '8.5', fill: Rs.c, fontWeight: 700
+    }, Rs.lbl),
+    React.createElement('text', {
+      x: px(Rd.bw[1]) - 6, y: py(Rd.tp[0]) - 6,
+      textAnchor: 'end', fontSize: '8.5', fill: Rd.c, fontWeight: 700
+    }, Rd.lbl),
+    React.createElement('text', {
+      x: (px(bwOv[0]) + px(bwOv[1])) / 2,
+      y: (py(tpOv[0]) + py(tpOv[1])) / 2 + 3,
+      textAnchor: 'middle', fontSize: '9.5', fill: '#92400e', fontWeight: 800
+    }, 'R₁ ∩ R₂'),
+
+    // ── Proyección sobre BW (barra horizontal debajo) ──────────────────
+    React.createElement('line', {
+      x1: px(Rs.bw[0]), y1: projY - 6, x2: px(Rs.bw[1]), y2: projY - 6,
+      stroke: Rs.c, strokeWidth: 4, strokeLinecap: 'round'
+    }),
+    React.createElement('line', {
+      x1: px(Rd.bw[0]), y1: projY + 6, x2: px(Rd.bw[1]), y2: projY + 6,
+      stroke: Rd.c, strokeWidth: 4, strokeLinecap: 'round'
+    }),
+    React.createElement('line', {
+      x1: px(bwOv[0]), y1: projY, x2: px(bwOv[1]), y2: projY,
+      stroke: '#92400e', strokeWidth: 7, strokeLinecap: 'round'
+    }),
+    React.createElement('text', {
+      x: (px(bwOv[0]) + px(bwOv[1])) / 2, y: projY + 20,
+      textAnchor: 'middle', fontSize: '8.5', fill: '#92400e', fontWeight: 700
+    }, `solape BW = [${bwOv[0]}, ${bwOv[1]}]`),
+
+    // ── Proyección sobre TP (barra vertical a la izquierda) ────────────
+    React.createElement('line', {
+      x1: projTY - 6, y1: py(Rs.tp[0]), x2: projTY - 6, y2: py(Rs.tp[1]),
+      stroke: Rs.c, strokeWidth: 4, strokeLinecap: 'round'
+    }),
+    React.createElement('line', {
+      x1: projTY + 6, y1: py(Rd.tp[0]), x2: projTY + 6, y2: py(Rd.tp[1]),
+      stroke: Rd.c, strokeWidth: 4, strokeLinecap: 'round'
+    }),
+    React.createElement('line', {
+      x1: projTY, y1: py(tpOv[0]), x2: projTY, y2: py(tpOv[1]),
+      stroke: '#92400e', strokeWidth: 7, strokeLinecap: 'round'
+    }),
+    React.createElement('text', {
+      x: projTY - 18, y: (py(tpOv[0]) + py(tpOv[1])) / 2 + 3,
+      textAnchor: 'end', fontSize: '8.5', fill: '#92400e', fontWeight: 700,
+      transform: `rotate(-90, ${projTY - 18}, ${(py(tpOv[0]) + py(tpOv[1])) / 2 + 3})`
+    }, `solape TP = [${tpOv[0]}, ${tpOv[1]}]`),
+
+    // Punteados guía (desde cada lado del rectángulo de intersección hasta las proyecciones)
+    ...[bwOv[0], bwOv[1]].map((v, i) =>
+      React.createElement('line', {
+        key: `gbw${i}`,
+        x1: px(v), y1: py(tpOv[0]),
+        x2: px(v), y2: projY - 8,
+        stroke: '#92400e', strokeWidth: 0.8, strokeDasharray: '3,3', opacity: 0.7
+      })
+    ),
+    ...[tpOv[0], tpOv[1]].map((v, i) =>
+      React.createElement('line', {
+        key: `gtp${i}`,
+        x1: px(bwOv[0]), y1: py(v),
+        x2: projTY + 8, y2: py(v),
+        stroke: '#92400e', strokeWidth: 0.8, strokeDasharray: '3,3', opacity: 0.7
+      })
+    ),
+
+    // Conclusion bar
+    React.createElement('rect', {
+      x: pad.l, y: H + 4, width: iW, height: 22, rx: 2,
+      fill: '#f5f4ee', stroke: '#ebeae3'
+    }),
+    React.createElement('text', {
+      x: pad.l + 10, y: H + 19, fontSize: '8.5',
+      fill: '#1f1f1c', fontStyle: 'italic'
+    }, 'R₁ ∩ R₂ ≠ ∅  ⇔  solape BW ≠ ∅  ∧  solape TP ≠ ∅   →   el cotejo 2D se reduce a dos cotejos 1D independientes')
+  );
+};
+</script>
+<script>// ── FigStates — Árbol de decisión de los 7 estados operativos ─────────────
+// Transcripción de la cadena when/then del evaluador de conciliación.
+// Cada ruta termina en un estado del reporte.
+
+const FigStates = () => {
+  const W = 720, H = 400;
+
+  // Columnas
+  const col = { q: 64, s: 250, st: 570 };
+
+  // Predicados (nodos intermedios)
+  const Q = ({ x, y, t, w = 150, h = 34 }) => React.createElement('g', { key: `q${x}${y}` },
+    React.createElement('rect', {
+      x: x - w / 2, y: y - h / 2, width: w, height: h, rx: 3,
+      fill: '#fafaf7', stroke: '#4a4a45', strokeWidth: 1
+    }),
+    React.createElement('text', {
+      x, y: y + 3, textAnchor: 'middle', fontSize: '8.5',
+      fontFamily: 'JetBrains Mono, monospace', fill: '#1f1f1c'
+    }, t)
+  );
+
+  // Estados finales (hojas)
+  const State = ({ x, y, t, sub, c, soft }) => React.createElement('g', null,
+    React.createElement('rect', {
+      x: x - 150, y: y - 16, width: 300, height: 32, rx: 3,
+      fill: soft, stroke: c, strokeWidth: 1.8
+    }),
+    React.createElement('text', {
+      x: x - 140, y: y - 2, fontSize: '9', fontWeight: 700,
+      fontFamily: 'JetBrains Mono, monospace', fill: c
+    }, t),
+    sub && React.createElement('text', {
+      x: x - 140, y: y + 10, fontSize: '7', fill: '#4a4a45',
+      fontStyle: 'italic', fontFamily: 'EB Garamond, serif'
+    }, sub)
+  );
+
+  // Conector con etiqueta
+  const Link = ({ x1, y1, x2, y2, lbl, lblX, lblY }) => React.createElement('g', null,
+    React.createElement('path', {
+      d: `M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1}, ${(x1 + x2) / 2} ${y2}, ${x2} ${y2}`,
+      fill: 'none', stroke: '#b8b8af', strokeWidth: 1.1
+    }),
+    lbl && React.createElement('text', {
+      x: lblX, y: lblY, fontSize: '7', fill: '#8a8a82',
+      fontFamily: 'JetBrains Mono, monospace', fontStyle: 'italic'
+    }, lbl)
+  );
+
+  // Leyenda de colores por severidad
+  const STATES = [
+    { y: 40,  t: 'COTEJO_OK',                sub: 'coincidencia exacta de descuento',                      c: '#15803d', soft: '#d3f9d8' },
+    { y: 85,  t: 'DIVERGENCIA_DESCUENTO',    sub: 'existe en ambos, δ distinto > 0,01 %',                  c: '#d97706', soft: '#fff4e6' },
+    { y: 130, t: 'DUPLICIDAD_INTRA_SISTEMA', sub: 'dos ofertas cubren el mismo día · hotel · TH',          c: '#5f3dc4', soft: '#e5dbff' },
+    { y: 175, t: 'EXCEDENTE_DESTINO',        sub: 'registro en destino sin contraparte en origen',         c: '#92400e', soft: '#fff4e6' },
+    { y: 220, t: 'AUSENCIA_DESTINO',         sub: 'registro en origen sin publicación en destino',         c: '#991b1b', soft: '#ffe3e3' },
+    { y: 265, t: 'INCONSISTENCIA_TEMPORAL',  sub: 'bw_l > tp_h  (reserva posterior al viaje)',             c: '#991b1b', soft: '#ffe3e3' },
+    { y: 310, t: 'AUSENCIA_TOTAL_OFERTA',    sub: 'ninguna fecha del registro aparece en destino',         c: '#991b1b', soft: '#ffe3e3' },
+  ];
+
+  const svgH = 360;
+
+  return React.createElement('svg', {
+    width: '100%', viewBox: `0 0 ${W} ${svgH}`,
+    style: { overflow: 'visible', fontFamily: 'JetBrains Mono, monospace' }
+  },
+    // Header
+    React.createElement('text', {
+      x: col.q - 60, y: 16, fontSize: '7.5', fontWeight: 700,
+      fill: '#8a8a82', letterSpacing: '0.14em'
+    }, 'EVALUACIÓN · POR FILA (HOTEL, TH, Fₗᵤ, Fₜₚ)'),
+    React.createElement('text', {
+      x: col.s - 75, y: 16, fontSize: '7.5', fontWeight: 700,
+      fill: '#8a8a82', letterSpacing: '0.14em'
+    }, 'SUB-CASO'),
+    React.createElement('text', {
+      x: col.st - 100, y: 16, fontSize: '7.5', fontWeight: 700,
+      fill: '#8a8a82', letterSpacing: '0.14em'
+    }, 'ESTADO EMITIDO'),
+
+    // Nodo raíz
+    Q({ x: col.q, y: 175, t: '¿existe en cada sistema?', w: 150 }),
+
+    // Ramas principales: tres escenarios
+    Q({ x: col.s, y: 40,  t: 'src ✓ · dst ✓  (ambos)' }),
+    Q({ x: col.s, y: 175, t: 'src ✓ · dst ✗  (sólo origen)' }),
+    Q({ x: col.s, y: 310, t: 'src ✗ · dst ✓  (sólo destino)' }),
+
+    // Sub-clasificaciones dentro de "coinciden"
+    Q({ x: col.s, y: 85,  t: 'δ_src ≠ δ_dst',  w: 110 }),
+    Q({ x: col.s, y: 130, t: '#src > 1 ∨ #dst > 1', w: 140 }),
+
+    // Sub-clasificaciones dentro de "sólo origen"
+    Q({ x: col.s, y: 220, t: '_completely_missing = 0', w: 160 }),
+    Q({ x: col.s, y: 265, t: 'bw_l > tp_h', w: 110 }),
+
+    // Links raíz → ramas principales
+    Link({ x1: col.q + 75, y1: 170, x2: col.s - 75, y2: 40,  lbl: 'src ✓ · dst ✓',  lblX: col.q + 90, lblY: 100 }),
+    Link({ x1: col.q + 75, y1: 175, x2: col.s - 75, y2: 175 }),
+    Link({ x1: col.q + 75, y1: 180, x2: col.s - 75, y2: 310, lbl: 'src ✗ · dst ✓', lblX: col.q + 90, lblY: 255 }),
+
+    // Links secundarios dentro de "coinciden"
+    Link({ x1: col.s, y1: 57,  x2: col.s, y2: 68,  lbl: 'si...', lblX: col.s + 8, lblY: 65 }),
+    Link({ x1: col.s, y1: 102, x2: col.s, y2: 113, lbl: '',       lblX: 0, lblY: 0 }),
+
+    // Links secundarios dentro de "sólo origen"
+    Link({ x1: col.s, y1: 192, x2: col.s, y2: 203 }),
+    Link({ x1: col.s, y1: 237, x2: col.s, y2: 248 }),
+
+    // Links sub-caso → estado
+    Link({ x1: col.s + 75, y1: 40,  x2: col.st - 150, y2: 40 }),   // COTEJO_OK
+    Link({ x1: col.s + 55, y1: 85,  x2: col.st - 150, y2: 85 }),   // DIVERGENCIA_DESCUENTO
+    Link({ x1: col.s + 70, y1: 130, x2: col.st - 150, y2: 130 }),  // DUPLICIDAD_INTRA_SISTEMA
+    Link({ x1: col.s + 80, y1: 220, x2: col.st - 150, y2: 220 }),  // AUSENCIA_DESTINO
+    Link({ x1: col.s + 55, y1: 265, x2: col.st - 150, y2: 265 }),  // INCONSISTENCIA_TEMPORAL
+    Link({ x1: col.s + 80, y1: 223, x2: col.st - 150, y2: 310 }),  // AUSENCIA_TOTAL_OFERTA
+    Link({ x1: col.s + 80, y1: 310, x2: col.st - 150, y2: 175 }),  // EXCEDENTE_DESTINO
+
+    // Estados (hojas)
+    ...STATES.map((s, i) => State({ key: `st${i}`, x: col.st, y: s.y, t: s.t, sub: s.sub, c: s.c, soft: s.soft })),
+
+    // Footnote
+    React.createElement('rect', {
+      x: col.q - 55, y: svgH - 24, width: W - 30, height: 20, rx: 2,
+      fill: '#f5f4ee', stroke: '#ebeae3'
+    }),
+    React.createElement('text', {
+      x: col.q - 45, y: svgH - 11, fontSize: '7.5', fill: '#1f1f1c', fontStyle: 'italic'
+    }, 'Orden de evaluación (first-match): la cadena when/then garantiza exclusión mutua — cada fila cae en exactamente un estado.')
+  );
+};
+</script>
+<script>// ── App — modern editorial, single column ───────────────────────────────
+const h = React.createElement;
+
+// Progress bar
+(() => {
+  const update = () => {
+    const el = document.documentElement;
+    const pct = (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100;
+    const f = document.getElementById('pfill');
+    if (f) f.style.width = `${pct}%`;
+  };
+  window.addEventListener('scroll', update, { passive: true });
+})();
+
+// ── Components ──────────────────────────────────────────────────────────
+const Sec = ({ id, n, title, children }) => {
+  const [ref, visible] = useInView(0.08);
+  return h('section', { id, ref, className: `sec${visible ? ' vis' : ''}` },
+    h('div', { className: 'sec-head' },
+      h('span', { className: 'sec-num' }, n),
+      h('h2', { className: 'sec-title' }, title)
+    ),
+    h('div', { className: 'sec-body' }, children)
+  );
+};
+
+const H3 = ({ n, children }) =>
+  h('h3', { 'data-n': n }, children);
+
+const Fig = ({ n, label, caption, children }) =>
+  h('figure', { className: 'fig' },
+    h('div', { className: 'fig-head' },
+      h('span', { className: 'fig-n' }, `Fig. ${n}`),
+      h('span', { className: 'fig-lbl' }, label)
+    ),
+    h('div', { className: 'fig-inner' }, children),
+    caption && h('figcaption', { className: 'fig-cap' },
+      h('strong', null, `Fig. ${n}.`), ' ', caption)
+  );
+
+const CB = ({ lang, badge, children }) =>
+  h('div', { className: 'cb' },
+    h('div', { className: 'cb-head' },
+      h('span', { className: 'cb-lang' }, lang),
+      badge && h('span', { className: 'cb-badge' }, badge)
+    ),
+    h('div', { className: 'cb-pre' }, h('pre', { dangerouslySetInnerHTML: { __html: children } }))
+  );
+
+const PQ = ({ children }) => h('blockquote', { className: 'pq' }, children);
+
+// ── Code snippets ───────────────────────────────────────────────────────
+const queryCode = `<span class="code-kw">def</span> <span class="code-fn">query_all</span>(node, q_l, q_h, results):
+    <span class="code-kw">if</span> node <span class="code-kw">is</span> None:
+        <span class="code-kw">return</span>
+    <span class="code-comment"># Poda: ningún intervalo del subárbol puede solapar</span>
+    <span class="code-kw">if</span> node.m < q_l:
+        <span class="code-kw">return</span>
+    <span class="code-comment"># Verificar el intervalo del nodo actual</span>
+    <span class="code-kw">if</span> node.interval.l <= q_h <span class="code-kw">and</span> node.interval.h >= q_l:
+        results.<span class="code-fn">append</span>(node.interval)
+    <span class="code-comment"># Descender a ambos hijos</span>
+    <span class="code-fn">query_all</span>(node.left,  q_l, q_h, results)
+    <span class="code-fn">query_all</span>(node.right, q_l, q_h, results)`;
+
+const pipelineCode = `<span class="code-comment"># Fase 1 · Construir el índice desde el sistema destino</span>
+trees = {}
+<span class="code-kw">for</span> (group_key, offers) <span class="code-kw">in</span> dst_df.<span class="code-fn">group_by</span>([<span class="code-str">"hotel"</span>, <span class="code-str">"room"</span>]):
+    trees[group_key] = <span class="code-fn">IntervalTree2D</span>()
+    <span class="code-kw">for</span> o <span class="code-kw">in</span> offers:
+        trees[group_key].<span class="code-fn">insert</span>(bw=(o.bw_l, o.bw_h), tp=(o.tp_l, o.tp_h), payload=o)
+
+<span class="code-comment"># Fase 2 · Consultar cada oferta del sistema origen</span>
+results = []
+<span class="code-kw">for</span> o_src <span class="code-kw">in</span> src_df.<span class="code-fn">iter_rows</span>():
+    tree = trees.<span class="code-fn">get</span>((o_src.hotel, o_src.room))
+    hits = tree.<span class="code-fn">query_2d</span>(o_src.bw_l, o_src.bw_h, o_src.tp_l, o_src.tp_h) <span class="code-kw">if</span> tree <span class="code-kw">else</span> []
+    results.<span class="code-fn">append</span>(<span class="code-fn">evaluate</span>(o_src, hits))`;
+
+const query2dCode = `<span class="code-kw">def</span> <span class="code-fn">query_2d</span>(outer, bw_l, bw_h, tp_l, tp_h):
+    <span class="code-comment"># Exterior · O(log n + k₁): candidatos cuyo BW solapa con [bw_l, bw_h]</span>
+    candidates = <span class="code-fn">query_all</span>(outer, bw_l, bw_h, [])
+    hits = []
+    <span class="code-kw">for</span> node <span class="code-kw">in</span> candidates:
+        <span class="code-comment"># Interior · O(log n + k_v): confirma solape en TP</span>
+        <span class="code-kw">if</span> <span class="code-fn">query_any</span>(node.tp_tree, tp_l, tp_h):
+            hits.<span class="code-fn">append</span>(node.offer)
+    <span class="code-kw">return</span> hits   <span class="code-comment"># coste total: O(log²n + k)</span>`;
+
+const ingestCode = `<span class="code-comment"># Lectura heterogénea: origen en .xlsx, destino en .csv</span>
+src_raw = <span class="code-fn">read_excel</span>(<span class="code-str">"origen.xlsx"</span>, engine=<span class="code-str">"calamine"</span>)
+dst_raw = <span class="code-fn">read_csv</span>(<span class="code-str">"destino.csv"</span>, sep=<span class="code-str">";"</span>, encoding=<span class="code-str">"utf-8-sig"</span>)
+
+<span class="code-comment"># Normalización: pivot ancho → largo, parseo multi-formato</span>
+src_df = <span class="code-fn">normalize</span>(src_raw, schema=COMMON_SCHEMA)
+dst_df = <span class="code-fn">normalize</span>(dst_raw, schema=COMMON_SCHEMA)`;
+
+const MemFig = typeof Fig7 !== 'undefined' ? Fig7 : (typeof Fig6 !== 'undefined' ? Fig6 : null);
+
+// ── App ────────────────────────────────────────────────────────────────
+const App = () =>
+  h(React.Fragment, null,
+    // Topbar
+    h('div', { className: 'topbar' },
+      h('div', null, h('span', { className: 'dot' }), 'Caso de Estudio Interno'),
+      h('div', { className: 'topbar-right' }, 'V 3.1  ·  17.04.2026')
+    ),
+
+    h('article', { className: 'paper' },
+
+      // Hero
+      h('header', { className: 'hero' },
+        h('div', { className: 'hero-kicker' }, 'Data Engineering', h('span', null, '#01')),
+        h('h1', { className: 'hero-title' },
+          'Interval Trees ', h('em', null, '2D'), h('br'),
+          'para conciliación comercial'
+        ),
+        h('p', { className: 'hero-sub' },
+          'Un motor geométrico que indexa ofertas como rectángulos en ℝ² y elimina el muro de memoria —reducción empírica del consumo de RAM superior al 99 %.'
+        ),
+        h('div', { className: 'hero-meta' },
+          h('div', { className: 'hero-meta-item' },
+            h('div', { className: 'hero-meta-label' }, 'Autor'),
+            h('div', { className: 'hero-meta-value' }, 'Nelson Ponce Luna')
+          ),
+          h('div', { className: 'hero-meta-item' },
+            h('div', { className: 'hero-meta-label' }, 'Rol'),
+            h('div', { className: 'hero-meta-value' }, 'Data Science & Automation')
+          ),
+          h('div', { className: 'hero-meta-item' },
+            h('div', { className: 'hero-meta-label' }, 'Publicado'),
+            h('div', { className: 'hero-meta-value' }, '17 abril 2026')
+          ),
+          h('div', { className: 'hero-meta-item' },
+            h('div', { className: 'hero-meta-label' }, 'Lectura'),
+            h('div', { className: 'hero-meta-value' }, '~ 18 min')
+          )
+        )
+      ),
+
+      // Abstract
+      h('div', { className: 'abstract' },
+        h('div', { className: 'abstract-label' }, '— Resumen'),
+        h('p', { className: 'abstract-body' },
+          h('strong', null, 'Problema. '),
+          'La conciliación periódica entre las ofertas gestionadas por nuestro sistema interno (',
+          h('em', null, 'origen'),
+          ', hoja de cálculo) y las publicadas por el sistema del colaborador externo (',
+          h('em', null, 'destino'),
+          ', fichero delimitado) requiere cruzar tuplas ',
+          h(M, { t: '(\\text{HOTEL},\\text{TH},\\text{BW},\\text{TP},\\delta)' }),
+          ' donde BW (', h('em', null, 'Booking Window'), ') y TP (', h('em', null, 'Travel Period'),
+          ') son rangos temporales. Ambos sistemas modelan los datos de forma distinta; la normalización que alinea los dos esquemas, basada en discretización día-a-día, materializa un producto cartesiano de orden ',
+          h(M, { t: 'n \\cdot d_1 \\cdot d_2' }),
+          ' que supera los 144 M de filas sobre catálogo real y desborda la memoria del equipo de trabajo durante esa fase.'
+        ),
+        h('p', { className: 'abstract-body', style: { marginTop: '1rem' } },
+          h('strong', null, 'Aproximación. '),
+          'Se reformula cada oferta como un rectángulo alineado con los ejes en ',
+          h(M, { t: '\\mathbb{R}^2' }),
+          ' y la conciliación como un problema de intersecciones rectangulares. Se indexan los rectángulos en un ',
+          h('em', null, 'Árbol de Intervalos Aumentado 2D'),
+          ' (BST aumentado con ', h(M, { t: 'm(v)' }),
+          ' en la dimensión BW, anidado con árboles TP en cada nodo), reemplazando el join cartesiano por una consulta geométrica con coste ',
+          h(M, { t: 'O(\\log^2 n + k)' }), ' y espacio ',
+          h(M, { t: 'O(n \\log n)' }), '.'
+        ),
+        h('p', { className: 'abstract-body', style: { marginTop: '1rem' } },
+          h('strong', null, 'Resultado. '),
+          'Tres iteraciones trazables —Polars (alto consumo), Polars + calamine (al límite) e Interval Tree 2D (óptimo)— reducen la RAM de ',
+          h(M, { t: '>16\\text{ GB}' }),
+          ' a ~85 MB y el tiempo de no-terminación a < 30 s sobre el mismo hardware, con ',
+          h('strong', null, '0 % de desviación'),
+          ' frente al baseline de discretización diaria. La solución emite siete estados operativos mutuamente excluyentes (cotejo válido, divergencia de descuento, duplicidad intra-sistema, excedente en destino, ausencia en destino, inconsistencia temporal y ausencia total).'
+        ),
+        h('div', { className: 'abstract-kw' },
+          ['Interval Tree', 'Augmented BST', '2D Range Query', 'Polars', 'Calamine', 'Conciliación origen/destino', 'Geometría computacional'].map(k =>
+            h('span', { key: k }, k)
+          )
+        )
+      ),
+
+      // I
+      h(Sec, { id: 'I', n: '§ 01', title: 'Introducción y contexto operativo' },
+        h('p', null,
+          'En un contexto de distribución comercial con ventas al vuelo y reservas anticipadas, cada oferta se define por un hotel, un tipo de habitación (TH), un descuento ',
+          h(M, { t: '\\delta \\in [0,1]' }), ' y dos rangos temporales: la ', h('em', null, 'Booking Window'),
+          ' —el intervalo de días en los que el cliente ', h('em', null, 'puede reservar'),
+          '— y el ', h('em', null, 'Travel Period'),
+          ' —el intervalo de días en los que el cliente ', h('em', null, 'viajaría'), '—.'
+        ),
+        h('p', null,
+          'El proceso de conciliación compara dos fuentes heterogéneas: el ',
+          h('strong', null, 'sistema interno'),
+          ' (origen), donde se definen las ofertas comerciales, y el ',
+          h('strong', null, 'sistema del colaborador externo'),
+          ' (destino), donde las ofertas quedan efectivamente publicadas al usuario final. Cada sistema mantiene su propio esquema de datos:'
+        ),
+        h('ul', null,
+          h('li', null, h('strong', null, 'Origen '), '(',
+            h('code', { className: 'inline-code' }, '.xlsx'),
+            ') — formato ancho: una fila por oferta, columnas por fecha TP. Refleja lo que el negocio ', h('em', null, 'quiere'), ' publicar.'),
+          h('li', null, h('strong', null, 'Destino '), '(',
+            h('code', { className: 'inline-code' }, '.csv'),
+            ', extraído por un ', h('em', null, 'scraper'),
+            ') — formato largo: una fila por oferta con BW y TP como rangos cerrados. Refleja lo que ', h('em', null, 'está realmente'), ' publicado.')
+        ),
+        h('p', null,
+          'Ambos sistemas procesan y representan los datos de forma distinta, por lo que la conciliación exige una fase previa de ',
+          h('strong', null, 'normalización'),
+          ' que alinee ambos esquemas sobre una clave de cruce común, la tupla ',
+          h(M, { t: '(\\text{HOTEL},\\,\\text{TH},\\,\\text{Fecha}_{BW},\\,\\text{Fecha}_{TP})' }),
+          '. Es precisamente durante esa normalización —y no en la carga ni en la lectura— donde la RAM se consume de forma masiva. Sin automatización, los desfases se detectan ',
+          h('em', null, 'a posteriori'),
+          ' —cuando un cliente ya ha reservado con descuento incorrecto— y se traducen en ',
+          h('strong', null, 'pérdidas directas, reembolsos y fricción operativa'), '.'
+        ),
+        h('p', null,
+          'El reto no es la igualdad de atributos, sino la ', h('strong', null, 'evaluación eficiente del solape 2D'),
+          ' a escala de catálogo completo: ',
+          h(M, { t: 'n \\approx 6{,}5 \\cdot 10^5' }),
+          ' ofertas distribuidas en ', h(M, { t: '\\approx 12\\,000' }),
+          ' grupos ', h(M, { t: '(\\text{HOTEL},\\text{TH})' }),
+          ', con ventanas que a veces abarcan varios meses.'
+        )
+      ),
+
+      // II
+      h(Sec, { id: 'II', n: '§ 02', title: 'Génesis: detección y tres iteraciones' },
+        h(H3, { n: '2.1' }, 'Detección de la necesidad'),
+        h('p', null,
+          'El proyecto no nació como encargo formal sino como la destilación de una serie de señales recurrentes que apuntaban al mismo síntoma: los descuentos publicados por el sistema del colaborador no siempre coincidían con los que el sistema interno tenía cargados. La detección fue ',
+          h('em', null, 'reactiva'),
+          ' —primero reclamaciones puntuales, luego un patrón— y la ingeniería del sistema fue la respuesta a ese patrón.'
+        ),
+        h('div', { className: 'timeline' },
+          h('div', { className: 'tl-t' }, 'Señal 1'),
+          h('div', { className: 'tl-d' },
+            h('strong', null, 'Reclamaciones aisladas. '),
+            'Clientes que reservan con un descuento que el sistema interno había marcado como caducado o inexistente. Back-office lo documenta en hilos sueltos de correo.'),
+          h('div', { className: 'tl-t' }, 'Señal 2'),
+          h('div', { className: 'tl-d' },
+            h('strong', null, 'Verificación manual. '),
+            'Se monta un cotejo artesanal con tablas dinámicas contra exportaciones manuales del sistema del colaborador. Cubre ~2 % del catálogo y consume una jornada completa. La tasa de error encontrada es demasiado alta para ser anecdótica.'),
+          h('div', { className: 'tl-t' }, 'Señal 3'),
+          h('div', { className: 'tl-d' },
+            h('strong', null, 'Hipótesis inicial errónea. '),
+            'Los primeros casos se atribuyen a errores de carga puntuales. Se descarta tras comprobar que las discrepancias persisten incluso después de recargas manuales: el problema no es la carga, es la ',
+            h('em', null, 'falta de verificación continua'), '.'),
+          h('div', { className: 'tl-t' }, 'Señal 4'),
+          h('div', { className: 'tl-d' },
+            h('strong', null, 'Patologías específicas. '),
+            'Aparecen casos imposibles de detectar a ojo: ofertas con ',
+            h(M, { t: 'bw_l > tp_h' }),
+            ' (inconsistencia temporal, es posible reservar después de haber viajado), dos ofertas del origen que cubren el mismo día para el mismo hotel/TH (duplicidad interna), o el caso opuesto en destino. Son bugs de geometría, no de carga.'),
+          h('div', { className: 'tl-t' }, 'Diagnóstico'),
+          h('div', { className: 'tl-d' },
+            h('strong', null, 'El problema no es encontrar ', h('em', null, 'un'), ' fallo sino enumerar ', h('em', null, 'todos'),
+            ' los tipos de fallo de forma exhaustiva. '),
+            'La solución artesanal era lenta, parcial y propensa a error humano. Hacía falta un sistema automatizado, exhaustivo y reproducible. Se asumió como iniciativa propia y se construyó en tres iteraciones sucesivas.')
+        ),
+        h('div', { className: 'note' },
+          h('div', { className: 'note-label' }, 'Siete estados operativos'),
+          'La especificación del negocio, destilada del cotejo manual, exigió emitir un estado por cada combinación ',
+          h(M, { t: '(\\text{HOTEL},\\text{TH},\\text{Fecha}_{BW},\\text{Fecha}_{TP})' }),
+          ': ', h('strong', null, 'cotejo válido'), ', ',
+          h('strong', null, 'ausencia en destino'), ', ',
+          h('strong', null, 'excedente en destino'), ', ',
+          h('strong', null, 'divergencia de descuento'), ', ',
+          h('strong', null, 'duplicidad intra-sistema (origen o destino)'), ', ',
+          h('strong', null, 'inconsistencia temporal'), ' y ',
+          h('strong', null, 'ausencia total de la oferta'),
+          '. El sistema debe garantizar que cada fila del reporte se asigne a exactamente uno. Este requisito atraviesa toda la pila —desde el esquema de datos hasta la evaluación final— y constriñe las decisiones algorítmicas.'
+        ),
+
+        h(H3, { n: '2.2' }, 'Vista panorámica de las tres iteraciones'),
+        h('p', null, 'La figura siguiente sintetiza el recorrido. Las tres iteraciones comparten motor (Polars); solo la tercera —al sustituir la discretización por un índice geométrico— modifica el régimen asintótico del problema.'),
+        h(Fig, { n: '01', label: 'Evolución del motor · tres iteraciones',
+          caption: h('span', null, h('strong', null, 'v1'), ' (Polars estándar) reveló el problema; ',
+            h('strong', null, 'v2'), ' (Polars + calamine) lo pospuso; ',
+            h('strong', null, 'v3'), ' (Polars + calamine + Interval Tree 2D) lo eliminó.')
+        }, h(FigJourney)),
+
+        h(H3, { n: '2.3' }, 'Iteración 1 — Polars con lectura estándar'),
+        h('p', null,
+          'El primer prototipo mantuvo el modelo mental del negocio: expandir cada oferta en una fila por día (', h('em', null, 'cartesian explode'),
+          ') para poder resolver la conciliación con un ', h('em', null, 'equi-join'),
+          ' exacto sobre cuatro claves ',
+          h(M, { t: '[\\text{HOTEL},\\text{TH},\\text{Fecha}_{BW},\\text{Fecha}_{TP}]' }), '.',
+          ' La implementación se hizo sobre Polars (núcleo Rust, ',
+          h('em', null, 'lazy evaluation'),
+          ') con la lectura ', h('code', { className: 'inline-code' }, '.xlsx'),
+          ' delegada al backend estándar (', h('code', { className: 'inline-code' }, 'openpyxl'), '). ',
+          'Sobre catálogo real la máquina entraba en ', h('em', null, 'swap'),
+          ', luego en ', h('em', null, 'thrashing'),
+          ', y el kernel terminaba el proceso por falta de memoria. La causa raíz era estructural: antes de iniciar el join ya se había materializado un DataFrame de más de cien millones de filas durante la fase de normalización.'
+        ),
+        h('p', null,
+          h('strong', null, 'El caso que delató el cartesiano. '),
+          'Una fracción del catálogo se recibe desde origen con un ',
+          h('em', null, 'valor centinela'),
+          ' en ', h(M, { t: 'bw_l' }),
+          ' —una fecha artificialmente antigua que marca ventanas comerciales anticipadas—. Al expandir BW día-a-día, una sola oferta de este sub-conjunto con TP de 180 días generaba decenas de miles de filas, y un puñado de ellas bastaban para volcar el proceso. Aislar este caso fue el primer indicio cuantitativo de que la estrategia de discretización era el cuello de botella, no la carga.'
+        ),
+        h(Fig, { n: '02', label: 'Discretización cartesiana: el origen del colapso',
+          caption: h('span', null,
+            'Una oferta con ventanas de 5×5 días produce 25 filas. Escalado al catálogo real, el DataFrame supera los ',
+            h('strong', null, '144 millones'), ' de registros durante la normalización.')
+        }, h(Fig3)),
+
+        h(Fig, { n: '03', label: 'Saturación del sistema · telemetría reconstruida',
+          caption: 'RAM, CPU, SWAP e I/O entran en zona crítica de forma escalonada hasta que el kernel intercepta el proceso.'
+        }, h(FigOverload)),
+
+        h(H3, { n: '2.4' }, 'Iteración 2 — Polars + calamine'),
+        h('p', null,
+          'La segunda iteración atacó las constantes. Se sustituyó la lectura ',
+          h('code', { className: 'inline-code' }, 'openpyxl'), ' por ',
+          h('code', { className: 'inline-code' }, 'python-calamine'),
+          ' (parser ', h('em', null, '.xlsx'), ' en Rust), que reduce drásticamente el coste de ingestión y libera memoria antes de que empiece el ',
+          h('em', null, 'melt'),
+          '. Se introdujo además una ',
+          h('strong', null, 'partición por el valor de BW inicial'),
+          ': las ofertas con ', h(M, { t: 'bw_l' }),
+          ' real (flujo A) conservan el join 4-clave; las ofertas con ',
+          h(M, { t: 'bw_l' }),
+          ' centinela (flujo B) se cruzan ', h('em', null, 'sin'), ' expandir BW, solo sobre ',
+          h(M, { t: '[\\text{HOTEL},\\text{TH},\\text{Fecha}_{TP}]' }),
+          '. El throughput se multiplicó por tres y la RAM cayó a ~9,8 GB.'
+        ),
+        h('p', null,
+          'Pero la complejidad asintótica seguía siendo ',
+          h(M, { t: 'O(n \\cdot d_1 \\cdot d_2)' }),
+          ' en el flujo A. Cualquier ampliación de ventana o llegada de una oferta con TP de 12 meses reactivaba el riesgo de OOM. ',
+          h('strong', null, 'Diagnóstico:'),
+          ' cambiar el lector y trocear por régimen pospone el muro; no lo elimina. La v2 es viable en régimen operativo actual pero quebradiza ante cualquier cambio de escala.'
+        ),
+
+        h(H3, { n: '2.5' }, 'Iteración 3 — Polars + calamine + Interval Trees'),
+        h('p', null,
+          'La tercera iteración fue un cambio de paradigma: se conserva el stack Polars + calamine de la v2 y se añade una nueva estructura de datos sobre él. En lugar de discretizar rangos en días y apoyarse en un ', h('em', null, 'equi-join'),
+          ' exacto, se reformula el problema en su forma natural: cada oferta es —geométricamente— un rectángulo alineado con los ejes en el plano BW × TP; la conciliación es detectar ',
+          h('em', null, 'intersecciones de rectángulos'),
+          '. Se indexan los rectángulos en un Árbol de Intervalos Aumentado 2D; el coste espacial cae a ',
+          h(M, { t: 'O(n \\log n)' }), ' y el de consulta a ', h(M, { t: 'O(\\log^2 n + k)' }),
+          '. El procesamiento completo se ejecuta en menos de 30 segundos consumiendo ~85 MB de RAM, sobre el mismo hardware donde la v1 había muerto.'
+        ),
+
+        h(H3, { n: '2.6' }, 'Pruebas realizadas y validación empírica'),
+        h('p', null,
+          'Cada salto de iteración se sometió a una batería de pruebas con tres objetivos: (a) cuantificar el coste real de cada estrategia en el régimen actual y en regímenes extrapolados, (b) aislar al responsable del colapso (motor vs. estructura de datos) y (c) verificar que las siguientes iteraciones preservan los resultados de la v1.0 —ésta era exhaustiva pero inviable—.'
+        ),
+
+        h('p', null,
+          h('strong', null, 'Protocolo. '),
+          'Se construyó un generador sintético parametrizado por ',
+          h(M, { t: 'n' }),
+          ' (número de ofertas) y por dos distribuciones de ancho de ventana ',
+          h(M, { t: 'd_1 = |BW|,\\; d_2 = |TP|' }),
+          '. Se mantuvieron constantes el resto de variables (hoteles, tipos de habitación, descuentos). Cada configuración se ejecutó tres veces; se reportó la mediana de RAM pico (',
+          h('code', { className: 'inline-code' }, 'resource.getrusage'),
+          ') y de tiempo total (', h('code', { className: 'inline-code' }, 'time.perf_counter'), ').'
+        ),
+
+        h('div', { className: 'ptable-wrap' },
+          h('table', { className: 'ptable' },
+            h('thead', null,
+              h('tr', null,
+                h('th', null, 'Escenario'),
+                h('th', null, h('code', { className: 'inline-code' }, 'n')),
+                h('th', null, h(M, { t: 'd_1' })),
+                h('th', null, h(M, { t: 'd_2' })),
+                h('th', null, 'v1 · Polars'),
+                h('th', null, 'v2 · + calamine'),
+                h('th', null, 'v3 · + Interval Tree 2D')
+              )
+            ),
+            h('tbody', null,
+              [
+                ['E-1 · Desarrollo',           '1·10³',   '30',   '30',   '0,9 s / 0,1 GB',  '0,3 s / 0,05 GB', '0,2 s / 12 MB'],
+                ['E-2 · Validación funcional', '5·10⁴',   '60',   '60',   '95 s / 4,1 GB',   '11 s / 1,1 GB',   '2,1 s / 24 MB'],
+                ['E-3 · Régimen productivo',   '6,5·10⁵', '90',   '120',  'OOM-kill',        '18 min / 9,8 GB', '27 s / 85 MB'],
+                ['E-4 · Estrés (TP 12 meses)', '6,5·10⁵', '90',   '360',  '— (no inicia)',   'OOM-kill',        '31 s / 92 MB'],
+                ['E-5 · Ventana extendida',    '8·10⁴',   '1820', '180',  'OOM-kill',        '4,6 min / 5,3 GB','1,8 s / 11 MB'],
+              ].map(([scn, n, a, b, v1, v2, v3], i) =>
+                h('tr', { key: i, className: i === 4 ? 'tr-hi' : '' },
+                  h('td', { style: { fontWeight: 500 } }, scn),
+                  h('td', { className: 'td-n' }, n),
+                  h('td', { className: 'td-n' }, a),
+                  h('td', { className: 'td-n' }, b),
+                  h('td', { className: 'td-n' }, v1),
+                  h('td', { className: 'td-n' }, v2),
+                  h('td', { className: 'td-g' }, v3)
+                )
+              )
+            )
+          )
+        ),
+
+        h('p', null,
+          h('strong', null, 'Lectura del experimento. '),
+          'E-4 es el escenario decisivo: duplicar ',
+          h(M, { t: 'd_2' }),
+          ' (de 120 a 360 días) lleva la v2 al OOM mientras que la v3 crece apenas un 15 %. El coste de la v2 depende de ',
+          h(M, { t: 'd_1 \\cdot d_2' }),
+          '; el de la v3, de ', h(M, { t: '\\log n' }),
+          ' —la magnitud de las ventanas es irrelevante—. El escenario E-5 aísla al sub-conjunto con centinela temporal (',
+          h(M, { t: 'd_1 \\approx 1\\,820' }),
+          ', ventana extendida por la convención de ',
+          h(M, { t: 'bw_l' }),
+          ' centinela) y confirma que el cartesiano ',
+          h(M, { t: 'n \\cdot d_1 \\cdot d_2' }),
+          ' es el único responsable del colapso: eliminarlo con el árbol reduce 5,3 GB → 11 MB en un escenario donde el motor Polars + calamine es idéntico.'
+        ),
+
+        h('p', null,
+          h('strong', null, 'Validación funcional. '),
+          'La v3 se validó ', h('em', null, 'bit-exact'),
+          ' contra la v2 (el baseline del negocio) sobre E-2 y la muestra E-3 recuperable. Procedimiento:'
+        ),
+        h('ol', null,
+          h('li', null, 'Ejecutar v2 sobre la entrada, volcar su DataFrame final ordenado por ',
+            h(M, { t: '(\\text{HOTEL}, \\text{ID}, \\text{Estado}, BW_{ini}, TP_{ini})' }),
+            ' y hashearlo con SHA-256.'),
+          h('li', null, 'Ejecutar v3 sobre la misma entrada, aplicar la compresión RLE del output (ver §5.3) y hashear con el mismo orden.'),
+          h('li', null, 'Comparar hashes. Si difieren, diff fila a fila con tolerancia ',
+            h(M, { t: '10^{-4}' }), ' en descuentos (precisión de negocio).')
+        ),
+        h('p', null,
+          'Resultado: ', h('strong', null, '0 filas divergentes'),
+          ' sobre 284 117 en E-3. Las únicas diferencias aparecieron inicialmente en unas pocas ofertas duplicadas del sub-conjunto con centinela; investigación posterior mostró que era un bug de la v2 —una oferta podía contarse simultáneamente en ambos flujos con el mismo día de TP— que la v3 cerraba por construcción. Se corrigió la v2 (deduplicación por match cruzado) antes de aceptar que v3 era equivalente.'
+        )
+      ),
+
+      // III
+      h(Sec, { id: 'III', n: '§ 03', title: 'Definición técnica del problema' },
+        h('p', null,
+          'Sea una oferta una tupla ',
+          h(M, { t: 'O = (h, r, [bw_l, bw_h], [tp_l, tp_h], \\delta)' }),
+          ' donde ', h(M, { t: 'h' }), ' identifica el hotel, ', h(M, { t: 'r' }),
+          ' el tipo de habitación, ', h(M, { t: '\\delta \\in [0,1]' }),
+          ' el descuento, y ambos intervalos son rangos cerrados sobre ',
+          h(M, { t: '\\mathbb{Z}' }),
+          ' (fechas mapeadas a ordinales). Geométricamente, cada oferta es un rectángulo alineado con los ejes en ',
+          h(M, { t: '\\mathbb{R}^2' }), '.'
+        ),
+        h(Fig, { n: '04', label: 'Representación geométrica de las fechas',
+          caption: 'Cada oferta es un rectángulo en el plano BW × TP. La conciliación se reduce a búsqueda de intersecciones rectangulares.'
+        }, h(Fig1)),
+
+        h(H3, { n: '3.1' }, 'Solape 1D'),
+        h('p', null,
+          'Dos intervalos cerrados ', h(M, { t: 'A = [a_l, a_h]' }), ' y ', h(M, { t: 'B = [b_l, b_h]' }),
+          ' solapan si y sólo si:'
+        ),
+        h('div', { className: 'eq-block' },
+          h(M, { t: 'A \\cap B \\ne \\emptyset \\;\\iff\\; a_l \\le b_h \\;\\wedge\\; b_l \\le a_h', d: true })
+        ),
+        h('p', null,
+          'La forma de este predicado —dos comparaciones de extremos cruzados, sin negación— es clave: un árbol ordenado por ',
+          h(M, { t: 'a_l' }), ' puede descartar subárboles enteros cuando el ',
+          h('em', null, 'máximo'), ' de los extremos derechos del subárbol queda por debajo de ',
+          h(M, { t: 'b_l' }),
+          '. De ahí la aumentación ', h(M, { t: 'm(v)' }),
+          ' que se introduce en §4.2.'
+        ),
+
+        h(H3, { n: '3.2' }, 'Solape 2D como conjunción de dos 1D'),
+        h('p', null,
+          'Dos rectángulos ',
+          h(M, { t: 'R_s = [bw_l^{(s)},bw_h^{(s)}] \\times [tp_l^{(s)},tp_h^{(s)}]' }),
+          ' y ',
+          h(M, { t: 'R_d = [bw_l^{(d)},bw_h^{(d)}] \\times [tp_l^{(d)},tp_h^{(d)}]' }),
+          ' se solapan si y sólo si sus proyecciones sobre cada eje se solapan de forma independiente:'
+        ),
+        h('div', { className: 'eq-block' },
+          h(M, { t: 'R_s \\cap R_d \\ne \\emptyset \\;\\iff\\; \\underbrace{\\bigl[bw_l^{(s)} \\le bw_h^{(d)} \\wedge bw_l^{(d)} \\le bw_h^{(s)}\\bigr]}_{\\text{solape en BW}} \\;\\wedge\\; \\underbrace{\\bigl[tp_l^{(s)} \\le tp_h^{(d)} \\wedge tp_l^{(d)} \\le tp_h^{(s)}\\bigr]}_{\\text{solape en TP}}', d: true })
+        ),
+        h(Fig, { n: '05', label: 'Solape 2D = solape BW × solape TP',
+          caption: h('span', null,
+            'Dos rectángulos —origen y destino— sobre el plano BW × TP. El área sombreada aparece ',
+            h('em', null, 'si y sólo si'),
+            ' sus proyecciones sobre ambos ejes solapan. Esto es lo que habilita indexar cada eje por separado con un árbol 1D y anidar.')
+        }, h(FigDecompose)),
+        h('p', null,
+          'Esta descomposición es la ', h('em', null, 'clave operativa'),
+          ' de toda la solución: permite tratar BW y TP por separado, indexar cada uno con un árbol 1D y componer los dos mediante anidamiento. No se puede indexar un rectángulo completo en un BST —no hay un orden natural sobre ',
+          h(M, { t: '\\mathbb{R}^2' }), '— pero sí se puede resolver ',
+          h('em', null, 'primero'), ' una de las dos dimensiones y delegar la otra a un sub-árbol especializado.'
+        ),
+
+        h(H3, { n: '3.3' }, 'Formulación como búsqueda geométrica'),
+        h('p', null,
+          'Dos ofertas son ', h('em', null, 'compatibles'), ' si comparten (hotel, habitación) y sus rectángulos se solapan:'),
+        h('div', { className: 'eq-block' },
+          h(M, { t: '(h_s, r_s) = (h_d, r_d) \\;\\wedge\\; bw_l^{(s)} \\le bw_h^{(d)} \\;\\wedge\\; bw_l^{(d)} \\le bw_h^{(s)} \\;\\wedge\\; tp_l^{(s)} \\le tp_h^{(d)} \\;\\wedge\\; tp_l^{(d)} \\le tp_h^{(s)}', d: true })
+        ),
+        h('p', null,
+          'Particionando por grupo ',
+          h(M, { t: '(h,r)' }),
+          ' —equivalente al ',
+          h('code', { className: 'inline-code' }, 'group_by([HOTEL, TH])'),
+          ' del pipeline— queda el núcleo: un problema clásico de geometría computacional, ',
+          h('em', null, 'rectangle intersection'),
+          ', estudiado por Edelsbrunner [3] y formalizado en de Berg et al. [2]. La conciliación se reduce a resolverlo ',
+          h('strong', null, 'sin materializar el producto cartesiano de las fechas'),
+          '. La §04 construye el índice que lo permite.'
+        )
+      ),
+
+      // IV
+      h(Sec, { id: 'IV', n: '§ 04', title: 'Arquitectura de la solución' },
+        h('p', null, 'La arquitectura se organiza en dos fases: tratamiento de datos e indexación geométrica.'),
+
+        h(H3, { n: '4.1' }, 'Fase A — Tratamiento de datos'),
+        h('p', null,
+          'Las fuentes llegan en formatos pesados (.xlsx y .csv). Se implementó ',
+          h('strong', null, 'Polars + calamine'), ', garantizando lectura vectorizada y eficiente en memoria.'
+        ),
+        h('ul', null,
+          h('li', null, h('strong', null, 'Pivot ancho → largo: '), 'un ', h('em', null, 'melt'), ' transforma cada columna-fecha en una fila por oferta-fecha.'),
+          h('li', null, h('strong', null, 'Parseo universal: '), 'unificación de formatos y traducción a entero ordinal ',
+            h(M, { t: '\\text{ord}(d)=(d-d_0).\\text{days}' }), '. Condición necesaria para aritmética entera en el árbol.'),
+          h('li', null, h('strong', null, 'Mapeo y limpieza: '), 'unificación de códigos equivalentes y exclusión anticipada de registros irrelevantes.')
+        ),
+        h(CB, { lang: 'python', badge: 'ingestión' }, ingestCode),
+
+        h(Fig, { n: '06', label: 'Pipeline: archivos → índice → reporte',
+          caption: 'Cinco etapas: lectura, normalización, indexación en el árbol 2D, cotejo y exportación.'
+        }, h(Fig2)),
+
+        h(H3, { n: '4.2' }, 'Fase B — Árboles de intervalos aumentados (1D)'),
+        h('p', null,
+          'En lugar de expandir los días, se indexan los intervalos como rangos continuos mediante ',
+          h('strong', null, 'Árboles de Intervalos Aumentados'),
+          ' [1, 2]: un BST ordenado por ', h(M, { t: 'l' }),
+          ' cuyos nodos almacenan, además del intervalo ',
+          h(M, { t: '[l,h]' }),
+          ', un campo de aumentación:'
+        ),
+        h('div', { className: 'eq-block' },
+          h(M, { t: 'm(v) \\;=\\; \\max\\bigl\\{\\, h(i) \\;:\\; i \\in T_v \\,\\bigr\\} \\;=\\; \\max\\bigl(v.h,\\; m(v.\\text{left}),\\; m(v.\\text{right})\\bigr)', d: true })
+        ),
+        h('p', null,
+          'donde ', h(M, { t: 'T_v' }),
+          ' denota el subárbol enraizado en ', h(M, { t: 'v' }),
+          '. La forma recursiva permite mantener ', h(M, { t: 'm(v)' }),
+          ' en ', h(M, { t: 'O(1)' }), ' durante la construcción o inserción. '
+        ),
+        h('p', null,
+          h('strong', null, 'Idea operativa. '),
+          'La consulta por rango —devolver todos los intervalos que solapan con ',
+          h(M, { t: '[q_l, q_h]' }),
+          '— se implementa como un DFS donde la aumentación actúa como ',
+          h('em', null, 'podador'),
+          ': si ', h(M, { t: 'm(v) < q_l' }),
+          ', ningún descendiente de ', h(M, { t: 'v' }),
+          ' puede tener su extremo derecho ',
+          h(M, { t: '\\ge q_l' }),
+          ', así que su intersección con ', h(M, { t: '[q_l, q_h]' }),
+          ' es necesariamente vacía y se descarta la rama completa.'
+        ),
+        h(CB, { lang: 'python', badge: 'consulta con poda' }, queryCode),
+
+        h(Fig, { n: '07', label: 'Árbol de intervalos: consulta con poda',
+          caption: h('span', null, 'Candidatos (azul), hits confirmados (verde), ramas descartadas (rojo) gracias a ',
+            h(M, { t: 'm(v) < q_l' }), '.')
+        }, h(Fig4)),
+
+        h('p', null,
+          h('strong', null, 'Walk-through numérico. '),
+          'Tomamos el árbol de la Figura 06 (siete intervalos) y la consulta ',
+          h(M, { t: 'q = [10, 20]' }),
+          '. La tabla siguiente traza la ejecución recursiva de ',
+          h('code', { className: 'inline-code' }, 'query_all'),
+          ' paso a paso:'
+        ),
+
+        h('div', { className: 'trace' },
+          h('div', { className: 'trace-hd' }, 'Traza · query_all(root, 10, 20)'),
+          h('table', null,
+            h('thead', null,
+              h('tr', null,
+                h('th', null, 'Paso'),
+                h('th', null, 'Nodo visitado'),
+                h('th', null, h(M, { t: 'm(v)' })),
+                h('th', null, 'Chequeo'),
+                h('th', null, 'Acción')
+              )
+            ),
+            h('tbody', null,
+              [
+                ['1', '[8, 22]  (raíz)',   '28', h('span', null, '28 ≥ 10  ✓  ·  8 ≤ 20 ∧ 22 ≥ 10 ✓'), h('span', null, 'visitado · solapa · desciende ambos'), 'tag-vis'],
+                ['2', '[3, 12]  (izq)',   '18', h('span', null, '18 ≥ 10  ✓  ·  3 ≤ 20 ∧ 12 ≥ 10 ✓'), h('span', null, 'visitado · solapa · desciende ambos'), 'tag-vis'],
+                ['3', '[1, 6]   (izq-izq)', '6',  h('span', null, h('strong', null, '6 < 10'), ' · poda'), h('span', null, 'poda completa del subárbol'),              'tag-prn'],
+                ['4', '[9, 18]  (izq-der)', '18', h('span', null, '18 ≥ 10  ✓  ·  9 ≤ 20 ∧ 18 ≥ 10 ✓'), h('span', null, h('strong', null, 'hit'), ' · desciende ambos'), 'tag-hit'],
+                ['5', '[16, 28] (der)',   '28', h('span', null, '28 ≥ 10  ✓  ·  16 ≤ 20 ∧ 28 ≥ 10 ✓'), h('span', null, 'visitado · solapa · desciende ambos'), 'tag-vis'],
+                ['6', '[14, 22] (der-izq)', '22', h('span', null, '22 ≥ 10  ✓  ·  14 ≤ 20 ∧ 22 ≥ 10 ✓'), h('span', null, h('strong', null, 'hit'), ' · desciende ambos'), 'tag-hit'],
+                ['7', '[20, 28] (der-der)', '28', h('span', null, '28 ≥ 10  ✓  ·  20 ≤ 20 ∧ 28 ≥ 10 ✓'), h('span', null, h('strong', null, 'hit'), ' · desciende ambos'), 'tag-hit'],
+              ].map(([p, nd, m, chk, ac, cls], i) =>
+                h('tr', { key: i },
+                  h('td', { className: 'tag-vis' }, p),
+                  h('td', null, nd),
+                  h('td', null, m),
+                  h('td', null, chk),
+                  h('td', { className: cls }, ac)
+                )
+              )
+            )
+          )
+        ),
+
+        h('p', null,
+          'Se visitan 7 nodos de un árbol de 7 (peor caso teórico en este ejemplo juguete), pero con ',
+          h(M, { t: 'k = 3' }),
+          ' hits entre ellos. La poda en el nodo ',
+          h(M, { t: '[1,6]' }),
+          ' demuestra el mecanismo: ', h(M, { t: 'm(v)=6 < q_l=10' }),
+          ' descarta una rama sin examinar sus hojas. Sobre un árbol balanceado de ',
+          h(M, { t: 'n' }),
+          ' intervalos con ',
+          h(M, { t: 'k' }), ' matches, el coste amortizado es ',
+          h(M, { t: 'O(\\log n + k)' }),
+          ' (ver derivación al final de §4.3).'
+        ),
+
+        h('div', { className: 'proof' },
+          h('div', { className: 'proof-hd' }, 'Proposición 1 · corrección de la poda (1D)'),
+          h('p', { className: 'proof-bd' },
+            h('strong', { style: { fontStyle: 'normal' } }, 'Afirmación. '),
+            'Sea ', h(M, { t: 'T_v' }), ' el subárbol enraizado en ', h(M, { t: 'v' }),
+            ' y ', h(M, { t: '[q_l, q_h]' }), ' el intervalo consulta. Si ',
+            h(M, { t: 'm(v) < q_l' }),
+            ', entonces ningún intervalo de ', h(M, { t: 'T_v' }),
+            ' solapa con ', h(M, { t: '[q_l, q_h]' }), '.'
+          ),
+          h('p', { className: 'proof-bd', style: { marginTop: '0.6rem' } },
+            h('strong', { style: { fontStyle: 'normal' } }, 'Demostración. '),
+            'Por definición ', h(M, { t: 'm(v) = \\max_{i \\in T_v} h(i)' }),
+            '. Supongamos ', h(M, { t: 'm(v) < q_l' }),
+            '. Para cualquier intervalo ', h(M, { t: 'i = [l_i, h_i] \\in T_v' }),
+            ' se cumple ', h(M, { t: 'h_i \\le m(v) < q_l' }),
+            ', luego ', h(M, { t: 'h_i < q_l' }),
+            '. Aplicando la definición de solape 1D (§3.1) se requiere ',
+            h(M, { t: 'l_i \\le q_h \\wedge q_l \\le h_i' }),
+            '; la segunda conjunción es falsa, por tanto ',
+            h(M, { t: '[l_i, h_i] \\cap [q_l, q_h] = \\emptyset' }),
+            '. Como ', h(M, { t: 'i' }), ' es arbitrario, la rama puede descartarse íntegramente.  ',
+            h('span', { className: 'qed' }, '∎')
+          )
+        ),
+
+        h(H3, { n: '4.3' }, 'Extensión bidimensional: árbol anidado'),
+        h('p', null,
+          'Una oferta tiene dos rangos —BW y TP— y hemos establecido en §3.2 que su solape 2D es la conjunción de dos solapes 1D independientes. La estructura natural es un ',
+          h('strong', null, 'árbol anidado'),
+          ' en el sentido de de Berg et al. [2, cap. 5]:'
+        ),
+        h('ul', null,
+          h('li', null, h('strong', null, 'Árbol exterior: '),
+            'BST aumentado sobre los intervalos BW. Resuelve la consulta ',
+            h(M, { t: '[q_{bw_l}, q_{bw_h}]' }), ' en ',
+            h(M, { t: 'O(\\log n + k_1)' }),
+            ' donde ', h(M, { t: 'k_1' }), ' es el número de candidatos en BW.'),
+          h('li', null, h('strong', null, 'Árbol interior: '),
+            'cada nodo del árbol exterior apunta a un segundo BST aumentado que indexa ',
+            h('em', null, 'los intervalos TP de las ofertas que entran en su subárbol canónico'),
+            '. Confirmar el solape en TP cuesta ', h(M, { t: 'O(\\log n + k_v)' }),
+            ' por candidato ', h(M, { t: 'v' }),
+            ' con ', h(M, { t: 'k_v' }), ' hits locales.')
+        ),
+        h(CB, { lang: 'python', badge: 'consulta 2D' }, query2dCode),
+
+        h(Fig, { n: '08', label: 'Consulta bidimensional en árbol anidado',
+          caption: 'El árbol exterior localiza candidatos en BW. Para cada uno, el sub-árbol interior confirma TP. La consulta compuesta se resuelve sin materializar producto cartesiano alguno.'
+        }, h(Fig5)),
+
+        h('div', { className: 'proof' },
+          h('div', { className: 'proof-hd' }, 'Proposición 2 · corrección de la consulta 2D'),
+          h('p', { className: 'proof-bd' },
+            h('strong', { style: { fontStyle: 'normal' } }, 'Afirmación. '),
+            h('code', { className: 'inline-code', style: { fontStyle: 'normal' } }, 'query_2d'),
+            ' devuelve exactamente el conjunto ',
+            h(M, { t: 'H = \\{\\, i : R_i \\cap Q \\ne \\emptyset \\,\\}' }),
+            ', donde ', h(M, { t: 'Q' }), ' es el rectángulo consulta.'
+          ),
+          h('p', { className: 'proof-bd', style: { marginTop: '0.6rem' } },
+            h('strong', { style: { fontStyle: 'normal' } }, 'Demostración. '),
+            '(', h('em', null, 'completitud'),
+            ') Sea ', h(M, { t: 'i \\in H' }), '. Por §3.2, ',
+            h(M, { t: '[bw_l^{(i)}, bw_h^{(i)}] \\cap [q_{bw_l}, q_{bw_h}] \\ne \\emptyset' }),
+            ', así que ', h(M, { t: 'i' }),
+            ' está entre los candidatos devueltos por la Proposición 1 aplicada al árbol exterior. Simultáneamente ',
+            h(M, { t: '[tp_l^{(i)}, tp_h^{(i)}] \\cap [q_{tp_l}, q_{tp_h}] \\ne \\emptyset' }),
+            ', luego el árbol interior de su nodo canónico lo confirma.  (',
+            h('em', null, 'solidez'),
+            ') Recíprocamente, si ',
+            h('code', { className: 'inline-code', style: { fontStyle: 'normal' } }, 'query_2d'),
+            ' devuelve ', h(M, { t: 'i' }),
+            ', ambos test 1D pasaron, por lo que ambas proyecciones solapan y, por la equivalencia de §3.2, ',
+            h(M, { t: 'R_i \\cap Q \\ne \\emptyset' }),
+            '. La poda (Prop. 1) preserva el conjunto de candidatos; sólo elimina ramas cuyo soporte es disjunto de ',
+            h(M, { t: 'q_l' }),
+            '.  ',
+            h('span', { className: 'qed' }, '∎')
+          )
+        ),
+
+        h(H3, { n: '4.4' }, 'Derivación de la complejidad'),
+        h('p', null,
+          h('strong', null, 'Espacio. '),
+          'Cada intervalo ', h(M, { t: 'i' }),
+          ' aparece en los árboles interiores de a lo sumo ',
+          h(M, { t: 'O(\\log n)' }),
+          ' nodos del árbol exterior (los nodos del ',
+          h('em', null, 'canonical path decomposition'),
+          '). El árbol exterior ocupa ', h(M, { t: 'O(n)' }),
+          '; la suma de los tamaños de los interiores es ',
+          h(M, { t: '\\sum_v |T_v^{\\text{in}}| \\le n \\cdot O(\\log n)' }),
+          '. Total: ', h(M, { t: 'O(n \\log n)' }), '.'
+        ),
+        h('p', null,
+          h('strong', null, 'Tiempo de consulta. '),
+          'Un teorema estándar sobre BST aumentados ([1] §14.3; [2] Teor. 10.4) acota el número de nodos visitados en una búsqueda por rango 1D como ',
+          h(M, { t: 'O(\\log n + k_1)' }),
+          ', donde ', h(M, { t: 'k_1' }),
+          ' es el número de intervalos devueltos. En el árbol anidado, la consulta exterior devuelve ',
+          h(M, { t: 'O(\\log n)' }),
+          ' nodos canónicos; cada uno dispara una sub-consulta interior de coste ',
+          h(M, { t: 'O(\\log n + k_v)' }),
+          '. Aplicando ', h(M, { t: '\\sum_v k_v = k' }), ':'
+        ),
+        h('div', { className: 'eq-block' },
+          h(M, { t: 'T(n) = \\sum_{v \\in \\text{exterior}} O(\\log n + k_v) = O(\\log n) \\cdot O(\\log n) + O(k) = O(\\log^2 n + k)', d: true })
+        ),
+        h('p', null,
+          'Es decir: el coste de la consulta es independiente del ancho de las ventanas ',
+          h(M, { t: 'd_1, d_2' }),
+          '. Exactamente lo contrario de la discretización diaria, donde el coste es ',
+          h(M, { t: '\\Theta(d_1 \\cdot d_2)' }),
+          ' por oferta.'
+        ),
+        h('p', null,
+          h('strong', null, 'Construcción. '),
+          'Ordenar los ', h(M, { t: 'n' }),
+          ' intervalos y construir el árbol exterior ',
+          h('em', null, 'bottom-up'),
+          ' cuesta ', h(M, { t: 'O(n \\log n)' }),
+          '. Cada árbol interior se construye con ',
+          h(M, { t: 'O(n_v \\log n_v)' }),
+          ' intervalos locales; sumando sobre los niveles, el total es ',
+          h(M, { t: 'O(n \\log^2 n)' }),
+          '. La aumentación ',
+          h(M, { t: 'm(v)' }),
+          ' se propaga en la recursión sin coste adicional.'
+        ),
+
+        h(H3, { n: '4.5' }, 'Alternativas consideradas'),
+        h('p', null,
+          'Antes de adoptar el árbol de intervalos aumentado se evaluaron varias estructuras y estrategias. La tabla se divide en dos bloques: ',
+          h('strong', null, 'enfoques más simples pero inferiores'),
+          ' (por encima de la fila resaltada), que fueron descartados por complejidad asintótica o por limitaciones prácticas, y ',
+          h('strong', null, 'estructuras geométricas comparables'),
+          ' (por debajo), que resuelven el mismo problema pero con peores garantías o más fricción de implementación. La decisión se tomó sobre coste de construcción, coste de consulta 2D, memoria en peor caso y garantías frente a desviación del tamaño de ventana.'
+        ),
+        h('div', { className: 'ptable-wrap' },
+          h('table', { className: 'ptable' },
+            h('thead', null,
+              h('tr', null,
+                h('th', null, 'Estrategia / estructura'),
+                h('th', null, 'Construcción'),
+                h('th', null, 'Consulta 2D'),
+                h('th', null, 'Motivo de descarte')
+              )
+            ),
+            h('tbody', null,
+              [
+                // Enfoques simples / inferiores
+                ['Hash-join con discretización día-a-día',
+                  h(M,{t:'O(n \\cdot d_1 \\cdot d_2)'}),
+                  h(M,{t:'O(1)'}),
+                  'Es la v1 de este mismo proyecto. Memoria proporcional al cartesiano de fechas; inviable para catálogos grandes o ventanas largas.'],
+                ['Nested loops por grupo',
+                  h(M,{t:'O(1)'}),
+                  h(M,{t:'O(n_g^2)'}),
+                  h('span',null,'Correcto y trivial, pero escala mal: un grupo con cientos de ofertas disparan ', h('em',null,'n²'), ' comparaciones. Sensible a grupos densos.')],
+                ['Lista ordenada + scan lineal por BW',
+                  h(M,{t:'O(n \\log n)'}),
+                  h(M,{t:'O(n + k)'}),
+                  'Barato de construir y de depurar, pero cada consulta recorre todo el rango: sin poda real, pierde frente a cualquier estructura de árbol.'],
+                ['Spatial hashing / bucketing por día',
+                  h(M,{t:'O(n \\cdot d_1 \\cdot d_2)'}),
+                  h(M,{t:'O(1 + k)'}),
+                  'Índice invertido por celda (día BW, día TP). Consulta rápida pero la tabla de buckets vuelve a ser el cartesiano; arrastra el problema original de memoria.'],
+                ['IntervalArray de pandas + filtro',
+                  h(M,{t:'O(n)'}),
+                  h(M,{t:'O(n \\cdot k)'}),
+                  'Idiomático y sin dependencias nuevas, pero las comparaciones son lineales por consulta; degenera a cuadrático sobre el grupo.'],
+                ['SQL range-overlap join (motor relacional)',
+                  h(M,{t:'O(n \\log n)'}),
+                  h(M,{t:'O(n)\\text{ peor caso}'}),
+                  'Se apoya en el optimizador y en índices B-tree. Funciona, pero el peor caso depende de las estadísticas del planner y no es reproducible en hardware de equipo.'],
+
+                // Estructuras geométricas comparables
+                ['R-tree [4]',            h(M,{t:'O(n \\log n)'}),   h(M,{t:'O(\\log n + k)'}),    'Garantías sólo amortizadas; peor caso depende de la heurística de split.'],
+                ['KD-tree',               h(M,{t:'O(n \\log n)'}),   h(M,{t:'O(\\sqrt{n} + k)'}),  'Diseñado para puntos; búsqueda por rangos subóptima sobre rectángulos.'],
+                ['Segment Tree 2D',       h(M,{t:'O(n \\log^2 n)'}), h(M,{t:'O(\\log^2 n + k)'}),  h('span',null,'Misma consulta, pero factor extra ', h('em',null,'log n'), ' en memoria.')],
+                ['Sweep line + BIT',      h(M,{t:'O(n \\log n)'}),   '— (offline)',                 'Excelente para batch; no soporta consultas ad-hoc posteriores.'],
+                ['Interval Tree 2D ★',    h(M,{t:'O(n \\log^2 n)'}), h(M,{t:'O(\\log^2 n + k)'}),  'Peor caso garantizado, coste independiente del ancho de las ventanas y construcción estática sin rotaciones.'],
+              ].map(([m, c, q, r], i) =>
+                h('tr', { key: i, className: i === 10 ? 'tr-hi' : '' },
+                  h('td', { style: { fontWeight: 500 } }, m),
+                  h('td', { className: 'td-n' }, c),
+                  h('td', { className: 'td-n' }, q),
+                  h('td', null, r)
+                )
+              )
+            )
+          )
+        )
+      ),
+
+      // V
+      h(Sec, { id: 'V', n: '§ 05', title: 'Implementación y complejidad' },
+        h('p', null,
+          'La integración particiona el problema por grupos ',
+          h(M, { t: '(h,r)' }),
+          '. Cada combinación producto × variante tiene su propio árbol. La función ',
+          h('code', { className: 'inline-code' }, 'evaluate(o_src, hits)'),
+          ' compara descuentos y emite un estado (OK, divergencia, ausente).'
+        ),
+        h(CB, { lang: 'python', badge: 'pipeline completo' }, pipelineCode),
+
+        h(H3, { n: '5.1' }, 'Complejidad comparada'),
+        h('div', { className: 'ptable-wrap' },
+          h('table', { className: 'ptable' },
+            h('thead', null,
+              h('tr', null,
+                h('th', null, 'Métrica'),
+                h('th', null, 'It. 1 — Polars'),
+                h('th', null, 'It. 2 — Polars + calamine'),
+                h('th', null, 'It. 3 — + Interval Tree 2D')
+              )
+            ),
+            h('tbody', null,
+              [
+                ['Complejidad espacial',    h(M,{t:'O(n \\cdot d_1 \\cdot d_2)'}), h(M,{t:'O(n \\cdot d_1 \\cdot d_2)'}), h(M,{t:'O(n \\log n)'})],
+                ['Construcción del índice', '—', '—', h(M,{t:'O(n \\log^2 n)'})],
+                ['Consulta por oferta',     h(M,{t:'O(d_1 \\cdot d_2)'}), h(M,{t:'O(d_1 \\cdot d_2)'}), h(M,{t:'O(\\log^2 n + k)'})],
+                ['Escalabilidad',           'Cuadrática', 'Cuadrática', 'Logarítmica'],
+                ['RAM consumida',           'OOM (>16 GB)', '~9,8 GB', '~85 MB'],
+                ['Tiempo total',            'No terminaba', '~18 min', '< 30 seg'],
+              ].map(([m, i1, i2, i3], i) =>
+                h('tr', { key: i },
+                  h('td', { style: { fontWeight: 500 } }, m),
+                  h('td', { className: 'td-n' }, i1),
+                  h('td', { className: 'td-n' }, i2),
+                  h('td', { className: 'td-g' }, i3)
+                )
+              )
+            )
+          )
+        ),
+        h('p', null,
+          'La iteración 2 mejoró las constantes; la iteración 3 cambió el régimen. La eliminación del factor ',
+          h(M, { t: 'd_1 \\cdot d_2' }), ' es el cambio cualitativo decisivo.'
+        )
+      ),
+
+      // VI
+      h(Sec, { id: 'VI', n: '§ 06', title: 'Resultados y conclusiones' },
+        h('p', null, 'La reescritura iterativa transformó un sistema colapsado en un producto performante. Los resultados con mayor impacto operativo:'),
+
+        h('div', { className: 'results-grid' },
+          [
+            { v: h(React.Fragment,null,'99',h('em',null,'%')), l: 'reducción\nde RAM' },
+            { v: h(React.Fragment,null,'<',h('em',null,'30'),'s'), l: 'tiempo\ntotal' },
+            { v: h(React.Fragment,null,'0',h('em',null,'%')), l: 'desviación\nresultados' },
+            { v: h(React.Fragment,null,'log',h('em',null,'²n')), l: 'complejidad\nconsulta' },
+          ].map((c,i) =>
+            h('div', { key: i, className: 'rcard' },
+              h('div', { className: 'rcard-v' }, c.v),
+              h('div', { className: 'rcard-l' }, c.l)
+            )
+          )
+        ),
+
+        h('ul', null,
+          h('li', null, h('strong', null, 'Liberación de memoria: '), 'reducción del consumo de RAM superior al 99 %, devolviendo la viabilidad a hardware de equipo.'),
+          h('li', null, h('strong', null, 'Escalabilidad independiente de la duración: '), 'el negocio puede ampliar campañas a meses sin penalizar la infraestructura.'),
+          h('li', null, h('strong', null, 'Validación y exactitud: '), '0 % de desviación frente al modelo de discretización diaria.'),
+          h('li', null, h('strong', null, 'Trazabilidad: '), 'las tres iteraciones quedan documentadas como evidencia de método: medir, optimizar lo que aporta, reformular cuando el régimen asintótico lo exige.')
+        ),
+
+        h('p', null,
+          'La conciliación termina materializándose en siete estados mutuamente excluyentes que el negocio consume directamente. El clasificador —una cadena ',
+          h('code', { className: 'inline-code' }, 'when / then'),
+          ' sobre el resultado del cotejo— traduce el solape geométrico a semántica operativa:'
+        ),
+        h(Fig, { n: '09', label: 'Árbol de decisión de los siete estados operativos',
+          caption: 'Cada fila del reporte se etiqueta con exactamente uno de los siete estados. El flujo refleja la evaluación real del pipeline de conciliación y es lo que garantiza exhaustividad y auditabilidad.'
+        }, h(FigStates)),
+
+        MemFig && h(Fig, { n: '10', label: 'Comparativa visual de memoria',
+          caption: 'El árbol elimina la saturación de RAM; la solución corre localmente sin hardware especializado.'
+        }, h(MemFig))
+      ),
+
+      // Refs
+      h(Sec, { id: 'Ref', n: '§ REF', title: 'Referencias' },
+        h('ol', { className: 'refs' },
+          [
+            h('span',null,'Cormen, T. H., Leiserson, C. E., Rivest, R. L., & Stein, C. (2009). ',h('em',null,'Introduction to Algorithms'),', 3rd ed. MIT Press. §14.3, pp. 348–354.'),
+            h('span',null,'de Berg, M., Cheong, O., van Kreveld, M., & Overmars, M. (2008). ',h('em',null,'Computational Geometry: Algorithms and Applications'),', 3rd ed. Springer. Cap. 10.'),
+            h('span',null,'Edelsbrunner, H. (1983). A new approach to rectangle intersections. ',h('em',null,'Int. Journal of Computer Mathematics, 13'),'(3–4), 209–229.'),
+            h('span',null,'Gaede, V., & Günther, O. (1998). Multidimensional access methods. ',h('em',null,'ACM Computing Surveys, 30'),'(2), 170–231.'),
+            h('span',null,'Bentley, J. L. (1979). Decomposable searching problems. ',h('em',null,'Information Processing Letters, 8'),'(5), 244–251.'),
+            h('span',null,'Vink, R. et al. (2024). ',h('em',null,'Polars: Lightning-fast DataFrame library'),'. pola.rs.'),
+          ].map((r, i) => h('li', { key: i, className: 'ref' }, h('span', null, r)))
+        )
+      )
+    ),
+
+    // Foot
+    h('footer', { className: 'foot' },
+      h('span', null, 'Nelson Ponce Luna'),
+      h('span', null, '© 2026  ·  v 3.1')
+    )
+  );
+
+ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+</script>
 
 </body>
 </html>

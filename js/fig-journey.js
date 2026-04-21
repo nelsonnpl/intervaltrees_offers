@@ -189,7 +189,7 @@ const FigJourney = () => {
   const Arrow = ({ from, to, lit }) => {
     const x1 = cardX(from) + cardW;
     const x2 = cardX(to);
-    const y  = cardY + cardH / 2;
+    const y = cardY + cardH / 2;
     return React.createElement('g', null,
       React.createElement('line', {
         x1, y1: y, x2: x2 - 6, y2: y,

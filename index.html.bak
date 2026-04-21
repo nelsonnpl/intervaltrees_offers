@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Caso de Estudio: Interval Trees 2D para Conciliación de Ofertas Comerciales</title>
+
+  <!-- Deps -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Paper styles -->
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+<!-- Scroll progress bar -->
+<div id="progress-bar"></div>
+
+<!-- React mount point -->
+<div id="root"></div>
+
+<!-- Components — loaded in dependency order as text/babel -->
+<script type="text/babel" src="js/utils.js"></script>
+<script type="text/babel" src="js/components.js"></script>
+<script type="text/babel" src="js/fig-journey.js"></script>
+<script type="text/babel" src="js/fig1.js"></script>
+<script type="text/babel" src="js/fig2.js"></script>
+<script type="text/babel" src="js/fig3.js"></script>
+<script type="text/babel" src="js/fig-overload.js"></script>
+<script type="text/babel" src="js/fig4.js"></script>
+<script type="text/babel" src="js/fig5.js"></script>
+<script type="text/babel" src="js/fig6.js"></script>
+<script type="text/babel" src="js/app.js"></script>
+
+</body>
+</html>
