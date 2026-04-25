@@ -2,8 +2,25 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Interval Trees 2D — Nelson Ponce Luna</title>
+  <meta name="description" content="Paper interactivo sobre conciliación comercial con Interval Trees 2D: reducción de RAM superior al 99 % y consulta geométrica en O(log²n + k)."/>
+  <meta name="robots" content="index,follow,max-image-preview:large"/>
+  <meta name="theme-color" content="#f7f5ef"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+  <link rel="shortcut icon" href="favicon-32.png"/>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+  <link rel="canonical" href="https://nelsonnpl.github.io/intervaltrees_offers/"/>
+  <meta property="og:type" content="article"/>
+  <meta property="og:locale" content="es_ES"/>
+  <meta property="og:url" content="https://nelsonnpl.github.io/intervaltrees_offers/"/>
+  <meta property="og:title" content="Interval Trees 2D — Nelson Ponce Luna"/>
+  <meta property="og:description" content="Paper interactivo sobre conciliación comercial con árboles de intervalos 2D, optimizado para lectura editorial y documentación técnica."/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:url" content="https://nelsonnpl.github.io/intervaltrees_offers/"/>
+  <meta name="twitter:title" content="Interval Trees 2D — Nelson Ponce Luna"/>
+  <meta name="twitter:description" content="Paper interactivo sobre conciliación comercial con árboles de intervalos 2D y mejora de memoria superior al 99 %."/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,10 +57,18 @@
   --f-disp: 'Instrument Serif', serif;
   --f-body: 'Newsreader', Georgia, serif;
   --f-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 body {
   background: var(--bg);
   color: var(--ink);
@@ -54,11 +79,61 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   font-feature-settings: "ss01", "onum";
+  overflow-x: hidden;
+}
+img, svg { display: block; max-width: 100%; height: auto; }
+button {
+  font: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0;
+}
+main:focus { outline: none; }
+:target { scroll-margin-top: 1.5rem; }
+.skip-link {
+  position: fixed;
+  top: max(0.9rem, calc(var(--safe-top) + 0.5rem));
+  left: max(1rem, calc(var(--safe-left) + 0.75rem));
+  z-index: 140;
+  padding: 0.55rem 0.85rem;
+  background: var(--ink);
+  color: var(--bg-card);
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  font-family: var(--f-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-bottom: none;
+  transform: translateY(-180%);
+  transition: transform 0.2s ease;
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+.skip-link:hover {
+  color: var(--bg-card);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+:where(a, button, [role="button"], [tabindex="0"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 /* ── Progress bar ────────────────────────────────────────── */
 .progress {
-  position: fixed; top: 0; left: 0; right: 0;
+  position: fixed; top: 0; left: var(--safe-left); right: var(--safe-right);
   height: 2px; z-index: 100;
   background: transparent;
 }
@@ -296,6 +371,7 @@ body {
 strong { font-weight: 600; color: var(--ink); }
 em { font-style: italic; }
 a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent); }
+a:hover { color: var(--accent-2); }
 
 /* ── Figure (breakout) ──────────────────────────────────── */
 .fig {
@@ -330,6 +406,10 @@ a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--
 }
 .fig-inner {
   padding: 1.5rem 1.3rem 1.2rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pinch-zoom;
 }
 .fig-cap {
   padding: 0.85rem 1.3rem 1rem;
@@ -428,6 +508,9 @@ a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--
   margin: 2.5rem calc(50% - min(var(--col-wide), 100vw - 4rem) / 2);
   width: min(var(--col-wide), 100vw - 4rem);
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pinch-zoom;
 }
 .ptable { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
 .ptable th {
@@ -590,7 +673,11 @@ a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--
   width: min(var(--col-wide), 100vw - 4rem);
   border: 1px solid var(--rule);
   border-radius: 2px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pinch-zoom;
 }
 .trace-hd {
   padding: 0.7rem 1rem;
@@ -694,30 +781,232 @@ a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--
 /* ── Animations ─────────────────────────────────────────── */
 @keyframes fadeInUp { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
 .svg-fade-in { animation: fadeInUp 0.4s ease both; }
+.fig-toggle {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(10, 10, 10, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 720px) {
-  .paper { padding: 4rem 1.5rem 5rem; }
-  .topbar { padding: 1rem 1.5rem 0; font-size: 0.6rem; }
+  body {
+    font-size: 1.04rem;
+    line-height: 1.68;
+  }
+  .paper { padding: 4rem 1.25rem 5rem; }
+  .topbar {
+    padding: 1rem 1.25rem 0;
+    font-size: 0.6rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.45rem 1rem;
+  }
   .topbar .topbar-right { display: none; }
   .hero { margin-bottom: 3rem; }
-  .hero-meta { gap: 1.5rem; }
+  .hero-title {
+    font-size: clamp(2.45rem, 12vw, 4rem);
+    line-height: 1.04;
+  }
+  .hero-title br { display: none; }
+  .hero-sub {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+  }
+  .hero-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.2rem;
+  }
+  .hero-meta-item { min-width: 0; }
   .abstract { margin-bottom: 4rem; padding: 1.8rem 0; }
+  .abstract-body { font-size: 1.05rem; }
   .sec { margin-bottom: 3.5rem; }
-  .fig, .cb, .ptable-wrap, .results-grid {
-    margin-left: calc(50% - 50vw + 1.5rem);
-    margin-right: calc(50% - 50vw + 1.5rem);
-    width: calc(100vw - 3rem);
+  .sec-head {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .sec-num { padding-top: 0; }
+  .sec-body h3 {
+    font-size: 1.34rem;
+    margin-top: 2.35rem;
+  }
+  .fig, .cb, .ptable-wrap, .results-grid, .proof, .tldr, .trace {
+    margin-left: calc(50% - 50vw + 1.25rem);
+    margin-right: calc(50% - 50vw + 1.25rem);
+    width: calc(100vw - 2.5rem);
   }
   .fig-head { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
   .fig-lbl { text-align: left; }
+  .fig-inner { padding: 1rem; }
+  .fig-cap { padding: 0.8rem 1rem 0.9rem; }
+  .cb-head { padding: 0.7rem 1rem; }
+  .cb-body { padding: 0.9rem 1rem; }
+  .proof { padding: 1rem; }
+  .tldr {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+    padding: 1rem;
+  }
+  .tldr-lbl { padding-top: 0; }
+  .timeline {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+  .tl-t {
+    border-right: none;
+    padding-right: 0;
+    padding-top: 0;
+  }
+  .tl-d { padding-left: 0; }
+  .ptable, .trace table {
+    min-width: 38rem;
+    font-size: 0.8rem;
+  }
+  .ptable th, .ptable td, .trace th, .trace td {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
   .results-grid { grid-template-columns: repeat(2, 1fr); }
-  .foot { flex-direction: column; gap: 0.4rem; padding: 2rem 1.5rem; }
+  .foot { flex-direction: column; gap: 0.4rem; padding: 2rem 1.25rem; }
+}
+@media (max-width: 520px) {
+  .paper { padding-top: 3.5rem; }
+  .hero-meta { grid-template-columns: 1fr; }
+  .results-grid { grid-template-columns: 1fr; }
+  .ref { gap: 0.75rem; }
+  .ref::before { width: 1.5rem; }
+}
+@media (max-width: 430px) {
+  :root {
+    --iphone-inline-left: max(1rem, calc(var(--safe-left) + 0.75rem));
+    --iphone-inline-right: max(1rem, calc(var(--safe-right) + 0.75rem));
+  }
+  body {
+    font-size: 1rem;
+    line-height: 1.64;
+  }
+  .paper {
+    padding-top: calc(3rem + var(--safe-top));
+    padding-right: var(--iphone-inline-right);
+    padding-bottom: calc(4.2rem + var(--safe-bottom));
+    padding-left: var(--iphone-inline-left);
+  }
+  .topbar {
+    padding-top: calc(0.85rem + var(--safe-top));
+    padding-right: var(--iphone-inline-right);
+    padding-left: var(--iphone-inline-left);
+    gap: 0.35rem 0.75rem;
+  }
+  .hero-kicker {
+    font-size: 0.64rem;
+    gap: 0.5rem;
+    margin-bottom: 1.4rem;
+  }
+  .hero-title {
+    font-size: clamp(2.15rem, 13.5vw, 3rem);
+    line-height: 1.03;
+    margin-bottom: 0.9rem;
+  }
+  .hero-sub {
+    font-size: 0.98rem;
+    line-height: 1.5;
+    margin-bottom: 1.65rem;
+  }
+  .hero-meta {
+    gap: 0.85rem 1rem;
+  }
+  .abstract {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+  .abstract-body {
+    font-size: 1rem;
+  }
+  .abstract-kw span {
+    font-size: 0.58rem;
+    padding: 0.2rem 0.5rem;
+  }
+  .fig, .cb, .ptable-wrap, .results-grid, .proof, .tldr, .trace {
+    margin-left: calc(50% - 50vw + var(--iphone-inline-left));
+    margin-right: calc(50% - 50vw + var(--iphone-inline-right));
+    width: calc(100vw - var(--iphone-inline-left) - var(--iphone-inline-right));
+  }
+  .fig-inner,
+  .cb-body,
+  .proof,
+  .tldr,
+  .trace-hd {
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+  }
+  .cb-body {
+    font-size: 0.86rem;
+  }
+  .eq-block {
+    margin: 1.35rem 0;
+    padding: 0.55rem 0;
+  }
+  .ptable,
+  .trace table {
+    min-width: 34rem;
+  }
+  .foot {
+    padding-right: var(--iphone-inline-right);
+    padding-bottom: calc(1.8rem + var(--safe-bottom));
+    padding-left: var(--iphone-inline-left);
+  }
+}
+@media (max-width: 390px) {
+  :root {
+    --iphone-inline-left: max(0.9rem, calc(var(--safe-left) + 0.6rem));
+    --iphone-inline-right: max(0.9rem, calc(var(--safe-right) + 0.6rem));
+  }
+  .paper {
+    padding-top: calc(2.8rem + var(--safe-top));
+    padding-bottom: calc(3.8rem + var(--safe-bottom));
+  }
+  .topbar {
+    font-size: 0.57rem;
+  }
+  .hero-title {
+    font-size: clamp(1.95rem, 13.8vw, 2.7rem);
+  }
+  .hero-sub {
+    font-size: 0.94rem;
+  }
+  .abstract-body {
+    font-size: 0.96rem;
+  }
+  .sec-title {
+    font-size: clamp(1.55rem, 8.6vw, 2rem);
+  }
+  .sec-body h3 {
+    font-size: 1.2rem;
+  }
+  .fig-inner,
+  .cb-body,
+  .proof,
+  .tldr {
+    padding: 0.82rem;
+  }
+  .ptable,
+  .trace table {
+    min-width: 32rem;
+  }
 }
   </style>
 </head>
 <body>
-<div class="progress"><div class="progress-fill" id="pfill"></div></div>
+<a class="skip-link" href="#content">Saltar al contenido</a>
+<div class="progress" aria-hidden="true"><div class="progress-fill" id="pfill"></div></div>
 <div id="root"></div>
 
 <script>// ── Shared React hooks & Math component ──────────────────────────────────────
@@ -755,6 +1044,53 @@ const useInView = (threshold = 0.12) => {
   return [ref, visible];
 };
 
+const useMediaQuery = (query) => {
+  const getMatches = () =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia(query).matches
+      : false;
+
+  const [matches, setMatches] = useState(getMatches);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mediaQuery = window.matchMedia(query);
+    const handleChange = () => setMatches(mediaQuery.matches);
+
+    handleChange();
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
+  }, [query]);
+
+  return matches;
+};
+
+const useCompactFigure = () => useMediaQuery('(max-width: 720px)');
+
+const getFigureToggleProps = (paused, setPaused, label) => ({
+  className: 'fig-toggle',
+  role: 'button',
+  tabIndex: 0,
+  'aria-pressed': paused,
+  'aria-label': `${label}. ${paused ? 'Animación pausada.' : 'Animación en reproducción.'} Pulsa Enter o Espacio para ${paused ? 'reanudar' : 'pausar'}.`,
+  onClick: () => setPaused(p => !p),
+  onKeyDown: (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setPaused(p => !p);
+    }
+  },
+  title: paused
+    ? 'Animación pausada. Click, Enter o Espacio para reanudar'
+    : 'Click, Enter o Espacio para pausar',
+  style: { cursor: 'pointer', userSelect: 'none' },
+});
+
 // Interval overlap check
 const overlaps1D = (al, ah, bl, bh) => al <= bh && bl <= ah;
 </script>
@@ -763,6 +1099,7 @@ const overlaps1D = (al, ah, bl, bh) => al <= bh && bl <= ah;
 // Cada iteración mejora pero solo la última cambia el régimen de complejidad.
 
 const FigJourney = () => {
+  const isCompact = useCompactFigure();
   const [ref, visible] = useInView(0.12);
   const [active, setActive] = useState(0);
 
@@ -971,9 +1308,171 @@ const FigJourney = () => {
     'Tres iteraciones, un único aprendizaje: medir antes de optimizar y reformular antes de escalar.';
   const lessonColor = active < 3 ? iters[active].color : '#0a0a0a';
 
+  if (isCompact) {
+    return React.createElement('div', { ref, style: { fontFamily: 'JetBrains Mono, monospace' } },
+      React.createElement('div', {
+        style: {
+          fontSize: '0.64rem',
+          color: '#8a8a82',
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          marginBottom: '0.75rem',
+          fontWeight: '700'
+        }
+      }, 'Evolución del motor · tres iteraciones'),
+      React.createElement('div', {
+        style: { display: 'grid', gap: '0.75rem' }
+      },
+        ...iters.map((d, idx) => {
+          const isHi = active === idx || active === 3;
+          return React.createElement('button', {
+            key: d.v,
+            type: 'button',
+            onClick: () => setActive(idx),
+            style: {
+              width: '100%',
+              textAlign: 'left',
+              border: `1px solid ${isHi ? d.color : '#d8d8d0'}`,
+              borderTop: `4px solid ${d.color}`,
+              background: isHi ? d.soft : 'white',
+              padding: '0.9rem 0.95rem',
+              boxShadow: isHi ? `0 8px 24px ${d.color}18` : 'none',
+              borderRadius: '2px'
+            }
+          },
+            React.createElement('div', {
+              style: {
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: '0.75rem',
+                alignItems: 'baseline',
+                marginBottom: '0.3rem'
+              }
+            },
+              React.createElement('span', {
+                style: {
+                  fontSize: '0.78rem',
+                  fontWeight: '900',
+                  color: d.color,
+                  letterSpacing: '0.04em'
+                }
+              }, d.v),
+              React.createElement('span', {
+                style: {
+                  fontSize: '0.58rem',
+                  color: '#8a8a82',
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase'
+                }
+              }, d.tag)
+            ),
+            React.createElement('div', {
+              style: {
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '0.35rem',
+                marginBottom: '0.55rem'
+              }
+            },
+              ...d.stack.map((item) =>
+                React.createElement('span', {
+                  key: item,
+                  style: {
+                    padding: '0.18rem 0.5rem',
+                    border: '1px solid #ebeae3',
+                    background: '#fafaf7',
+                    fontSize: '0.58rem',
+                    color: '#1f1f1c'
+                  }
+                }, item)
+              )
+            ),
+            React.createElement('div', {
+              style: {
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                gap: '0.55rem 0.75rem',
+                marginBottom: '0.55rem'
+              }
+            },
+              React.createElement('div', null,
+                React.createElement('div', {
+                  style: { fontSize: '0.54rem', color: '#8a8a82', letterSpacing: '0.12em', textTransform: 'uppercase' }
+                }, 'Tiempo'),
+                React.createElement('div', {
+                  style: { fontSize: '0.82rem', color: d.color, fontWeight: '900' }
+                }, d.time)
+              ),
+              React.createElement('div', null,
+                React.createElement('div', {
+                  style: { fontSize: '0.54rem', color: '#8a8a82', letterSpacing: '0.12em', textTransform: 'uppercase' }
+                }, 'RAM'),
+                React.createElement('div', {
+                  style: { fontSize: '0.82rem', color: d.color, fontWeight: '900' }
+                }, d.ram)
+              )
+            ),
+            React.createElement('div', {
+              style: {
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: d.color,
+                color: 'white',
+                padding: '0.28rem 0.55rem',
+                fontSize: '0.6rem',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                marginBottom: '0.55rem'
+              }
+            }, `${d.icon} ${d.status}`),
+            React.createElement('p', {
+              style: {
+                fontFamily: 'EB Garamond, serif',
+                fontStyle: 'italic',
+                fontSize: '0.8rem',
+                lineHeight: 1.45,
+                color: '#4a4a45'
+              }
+            }, d.desc)
+          );
+        })
+      ),
+      React.createElement('div', {
+        style: {
+          marginTop: '0.85rem',
+          padding: '0.8rem 0.9rem',
+          border: `1px solid ${lessonColor}`,
+          background: '#fafaf7',
+          borderLeft: `3px solid ${lessonColor}`
+        }
+      },
+        React.createElement('div', {
+          style: {
+            fontSize: '0.58rem',
+            color: lessonColor,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            marginBottom: '0.35rem',
+            fontWeight: '700'
+          }
+        }, 'Aprendizaje'),
+        React.createElement('p', {
+          style: {
+            fontFamily: 'EB Garamond, serif',
+            fontStyle: 'italic',
+            fontSize: '0.9rem',
+            lineHeight: 1.45,
+            color: '#1f1f1c'
+          }
+        }, lesson)
+      )
+    );
+  }
+
   return React.createElement('div', { ref, style: { fontFamily: 'JetBrains Mono, monospace' } },
     React.createElement('svg',
-      { width: '100%', viewBox: `0 0 ${W} ${H}`, style: { overflow: 'visible' } },
+      { width: isCompact ? W : '100%', viewBox: `0 0 ${W} ${H}`, style: { overflow: 'visible' } },
 
       // Header
       React.createElement('text', {
@@ -1039,6 +1538,7 @@ const FigJourney = () => {
 // iteración (Polars + lectura estándar) corriendo el cotejo con n=10.000 y d₁=d₂=120 días.
 
 const FigOverload = () => {
+  const isCompact = useCompactFigure();
   const [ref, visible] = useInView(0.15);
   const [t, setT] = useState(0);  // 0..100  ─ progreso simulado del run
 
@@ -1165,6 +1665,120 @@ const FigOverload = () => {
   ];
   const visibleLogs = logs.filter(l => t >= l.at);
 
+  if (isCompact) {
+    const metrics = [
+      { label: 'RAM', value: ram, unit: '%', peak: '9.8 GB / 16', color: barColor(ram) },
+      { label: 'CPU', value: cpu, unit: '%', peak: '8 cores @ 100%', color: barColor(cpu) },
+      { label: 'SWAP', value: swap, unit: '%', peak: 'thrashing', color: barColor(swap) },
+      { label: 'I/O', value: io, unit: '%', peak: 'spike pattern', color: barColor(io) },
+    ];
+
+    return React.createElement('div', { ref, style: { fontFamily: 'JetBrains Mono, monospace' } },
+      React.createElement('div', {
+        style: {
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+          gap: '0.7rem',
+          marginBottom: '0.85rem'
+        }
+      },
+        ...metrics.map((metric) =>
+          React.createElement('div', {
+            key: metric.label,
+            style: {
+              background: '#0a0a0a',
+              border: '1px solid #1f1f1c',
+              padding: '0.75rem'
+            }
+          },
+            React.createElement('div', {
+              style: {
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: '0.5rem',
+                marginBottom: '0.35rem',
+                alignItems: 'baseline'
+              }
+            },
+              React.createElement('span', {
+                style: { fontSize: '0.62rem', color: '#8a8a82', letterSpacing: '0.12em' }
+              }, metric.label),
+              React.createElement('span', {
+                style: { fontSize: '0.9rem', color: metric.color, fontWeight: '900' }
+              }, `${metric.value.toFixed(0)}${metric.unit}`)
+            ),
+            React.createElement('div', {
+              style: {
+                height: '10px',
+                background: '#1f1f1c',
+                borderRadius: '2px',
+                overflow: 'hidden',
+                marginBottom: '0.35rem'
+              }
+            },
+              React.createElement('div', {
+                style: {
+                  height: '100%',
+                  width: `${metric.value}%`,
+                  background: metric.color
+                }
+              })
+            ),
+            React.createElement('div', {
+              style: {
+                fontSize: '0.56rem',
+                color: '#8a8a82',
+                fontFamily: 'EB Garamond, serif',
+                fontStyle: 'italic'
+              }
+            }, `pico: ${metric.peak}`)
+          )
+        )
+      ),
+      React.createElement('div', {
+        style: {
+          background: '#1f1f1c',
+          border: '1px solid #2a2a25',
+          padding: '0.75rem',
+          marginBottom: '0.75rem'
+        }
+      },
+        React.createElement('div', {
+          style: {
+            fontSize: '0.6rem',
+            color: '#8a8a82',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            marginBottom: '0.55rem'
+          }
+        }, 'stderr · stream en vivo'),
+        ...visibleLogs.slice(-5).map((log) =>
+          React.createElement('div', {
+            key: log.at,
+            style: {
+              fontSize: '0.67rem',
+              color: log.c,
+              lineHeight: 1.45,
+              marginBottom: '0.28rem'
+            }
+          }, log.txt)
+        )
+      ),
+      React.createElement('div', {
+        style: {
+          padding: '0.7rem 0.85rem',
+          background: oomTriggered ? '#991b1b' : '#0a0a0a',
+          color: 'white',
+          fontSize: '0.65rem',
+          letterSpacing: '0.08em',
+          lineHeight: 1.45
+        }
+      }, oomTriggered
+        ? 'Proceso interrumpido: el OOM-killer del kernel corta la ejecución antes del join.'
+        : `Run en curso · ${(100 - ram).toFixed(0)}% RAM disponible · proyección de OOM en ${Math.max(0, ((100 - ram) / 1.05 * 0.2)).toFixed(1)} s`)
+    );
+  }
+
   return React.createElement('div', { ref, style: { fontFamily: 'JetBrains Mono, monospace' } },
     // Inline keyframes for the alert pulse
     React.createElement('style', null,
@@ -1173,7 +1787,7 @@ const FigOverload = () => {
     ),
 
     React.createElement('svg', {
-      width: '100%', viewBox: `0 0 ${W} ${H}`,
+      width: isCompact ? W : '100%', viewBox: `0 0 ${W} ${H}`,
       style: { overflow: 'visible', borderRadius: 4 }
     },
       React.createElement(Frame),
@@ -1252,6 +1866,7 @@ const FigOverload = () => {
 // La conciliación se reduce a detectar intersecciones rectangulares.
 
 const Fig1 = () => {
+  const isCompact = useCompactFigure();
   const [tick, setTick] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -1262,8 +1877,9 @@ const Fig1 = () => {
   }, [paused]);
 
   const phase = tick % 5;
-  const W = 460, H = 280;
-  const pad = { l: 56, b: 46, r: 26, t: 28 };
+  const W = isCompact ? 360 : 460;
+  const H = isCompact ? 248 : 280;
+  const pad = isCompact ? { l: 44, b: 42, r: 18, t: 22 } : { l: 56, b: 46, r: 26, t: 28 };
   const iW = W - pad.l - pad.r;
   const iH = H - pad.t - pad.b;
   const D = 32;
@@ -1290,7 +1906,7 @@ const Fig1 = () => {
   ];
 
   return React.createElement('div',
-    { onClick: () => setPaused(p => !p), style: { cursor: 'pointer', userSelect: 'none' }, title: 'Click para pausar / reanudar' },
+    getFigureToggleProps(paused, setPaused, 'Figura interactiva de representación geométrica BW por TP'),
 
     // Phase description bar
     React.createElement('div', {
@@ -1495,6 +2111,7 @@ const Fig1 = () => {
 // un reporte tabular con el estado de cada oferta.
 
 const Fig2 = () => {
+  const isCompact = useCompactFigure();
   const [phase, setPhase] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -1968,12 +2585,85 @@ const Fig2 = () => {
     );
   };
 
+  if (isCompact) {
+    const stagesCompact = [
+      { n: '01', title: 'INPUT', body: 'origen .xlsx + destino .csv', color: '#15803d' },
+      { n: '02', title: 'PARSE', body: 'parse() / clean() · esquema unificado', color: '#0a0a0a' },
+      { n: '03', title: 'INDEX', body: 'Interval Tree 2D · indexación sobre BW × TP', color: '#1e3a8a' },
+      { n: '04', title: 'CHECK', body: 'cross-check src ∩ dst · clasificación operativa', color: '#92400e' },
+      { n: '05', title: 'OUTPUT', body: 'reporte consolidado · OK / Δ / Falta', color: '#0a0a0a' },
+    ];
+
+    return React.createElement(
+      'div',
+      getFigureToggleProps(paused, setPaused, 'Figura interactiva de arquitectura del pipeline'),
+      React.createElement('div', {
+        style: {
+          fontSize: '0.68rem',
+          fontFamily: 'JetBrains Mono, monospace',
+          color: '#1f1f1c',
+          marginBottom: '0.8rem',
+          background: '#f5f4ee',
+          padding: '0.55rem 0.8rem',
+          borderLeft: '3px solid #0a0a0a'
+        }
+      }, `Fase activa · ${stagesCompact[phase].n} ${stagesCompact[phase].title}`),
+      React.createElement('div', {
+        style: { display: 'grid', gap: '0.55rem' }
+      },
+        ...stagesCompact.map((stage, idx) => {
+          const active = isActive(idx);
+          const current = isCurrent(idx);
+          return React.createElement(React.Fragment, { key: stage.n },
+            React.createElement('div', {
+              style: {
+                border: `1px solid ${active ? stage.color : '#d8d8d0'}`,
+                borderLeft: `4px solid ${stage.color}`,
+                background: current ? '#fafaf7' : 'white',
+                padding: '0.8rem 0.85rem',
+                boxShadow: current ? '0 10px 24px rgba(0,0,0,0.06)' : 'none'
+              }
+            },
+              React.createElement('div', {
+                style: {
+                  fontSize: '0.58rem',
+                  color: active ? stage.color : '#8a8a82',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  marginBottom: '0.3rem',
+                  fontWeight: '700'
+                }
+              }, `${stage.n} · ${stage.title}`),
+              React.createElement('div', {
+                style: {
+                  fontSize: '0.82rem',
+                  color: '#1f1f1c',
+                  lineHeight: 1.45,
+                  fontFamily: 'EB Garamond, serif',
+                  fontStyle: 'italic'
+                }
+              }, stage.body)
+            ),
+            idx < stagesCompact.length - 1 && React.createElement('div', {
+              style: {
+                textAlign: 'center',
+                color: active ? '#0a0a0a' : '#b8b8af',
+                fontSize: '0.85rem',
+                lineHeight: 1
+              }
+            }, '↓')
+          );
+        })
+      )
+    );
+  }
+
   return React.createElement(
     'div',
-    { onClick: () => setPaused(p => !p), style: { cursor: 'pointer', userSelect: 'none' }, title: 'Click para pausar / reanudar' },
+    getFigureToggleProps(paused, setPaused, 'Figura interactiva de arquitectura del pipeline'),
 
     React.createElement('svg', {
-      width: '100%', viewBox: `0 0 ${W} ${H}`,
+      width: isCompact ? W : '100%', viewBox: `0 0 ${W} ${H}`,
       style: { fontFamily: 'JetBrains Mono, monospace', overflow: 'visible' }
     },
 
@@ -2041,6 +2731,7 @@ const Fig2 = () => {
 // tras la discretización. La inflación es O(d₁ · d₂).
 
 const Fig3 = () => {
+  const isCompact = useCompactFigure();
   const [phase, setPhase] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -2055,16 +2746,16 @@ const Fig3 = () => {
   const total = bw.length * tp.length;
 
   return React.createElement('div',
-    { onClick: () => setPaused(p => !p), style: { cursor: 'pointer', userSelect: 'none' }, title: 'Click para pausar / reanudar', },
+    getFigureToggleProps(paused, setPaused, 'Figura interactiva de explosión cartesiana'),
 
     React.createElement('div', { style: { fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem' } },
 
       // Top row: input → arrow → output
       React.createElement('div',
-        { style: { display: 'flex', gap: '2rem', alignItems: 'flex-start', justifyContent: 'center', flexWrap: 'wrap' } },
+        { style: { display: 'flex', gap: isCompact ? '1rem' : '2rem', alignItems: 'flex-start', justifyContent: 'center', flexWrap: 'wrap' } },
 
         // ── Input card ────────────────────────────────────────────────────
-        React.createElement('div', { style: { textAlign: 'center' } },
+        React.createElement('div', { style: { textAlign: 'center', width: isCompact ? '100%' : 'auto' } },
           React.createElement('div', {
             style: {
               fontSize: '0.6rem', color: '#8a8a82',
@@ -2076,7 +2767,7 @@ const Fig3 = () => {
             style: {
               border: '2px solid #1e3a8a',
               padding: '0.8rem 1.05rem',
-              background: 'white', minWidth: '170px',
+              background: 'white', minWidth: 0, width: isCompact ? '100%' : '170px',
               boxShadow: '0 2px 12px rgba(30,58,138,0.08)',
               transition: 'box-shadow 0.3s'
             }
@@ -2149,7 +2840,7 @@ const Fig3 = () => {
 
         // ── Output area ───────────────────────────────────────────────────
         React.createElement('div',
-          { style: { textAlign: 'center', minWidth: '195px' } },
+          { style: { textAlign: 'center', minWidth: 0, width: isCompact ? '100%' : '195px' } },
 
           React.createElement('div', {
             style: {
@@ -2177,7 +2868,7 @@ const Fig3 = () => {
                   border: '1px solid #fff4e6',
                   borderLeft: '3px solid #d97706',
                   padding: '4px 10px', marginBottom: '3px',
-                  display: 'flex', justifyContent: 'space-between',
+                  display: 'flex', justifyContent: 'space-between', flexWrap: isCompact ? 'wrap' : 'nowrap',
                   animationDelay: `${i * 90}ms`,
                   fontFamily: 'JetBrains Mono, monospace', fontSize: '0.7rem'
                 }
@@ -2202,7 +2893,7 @@ const Fig3 = () => {
                   border: '1px solid #ffe3e3',
                   borderLeft: '3px solid #991b1b',
                   padding: '2.5px 7px', marginBottom: '1.5px',
-                  display: 'flex', gap: '8px',
+                  display: 'flex', gap: '8px', flexWrap: isCompact ? 'wrap' : 'nowrap',
                   animationDelay: `${(i * 5 + j) * 30}ms`,
                   fontFamily: 'JetBrains Mono, monospace', fontSize: '0.66rem'
                 }
@@ -2265,7 +2956,7 @@ const Fig3 = () => {
 
       // ── Scale stats (always visible) ───────────────────────────────────
       React.createElement('div',
-        { style: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.85rem', marginTop: '1.4rem' } },
+        { style: { display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 1fr 1fr', gap: '0.85rem', marginTop: '1.4rem' } },
         [
           { lbl: 'n ofertas',    v: '10.000',    sub: 'catálogo de referencia',  c: '#1e3a8a' },
           { lbl: 'd₁ × d₂',      v: '120 × 120', sub: 'ventana media en días',   c: '#d97706' },
@@ -2304,6 +2995,7 @@ const Fig3 = () => {
 // La animación recorre el árbol respondiendo a la consulta q = [10, 20].
 
 const Fig4 = () => {
+  const isCompact = useCompactFigure();
   const [step, setStep] = useState(-1);
   const [paused, setPaused] = useState(false);
 
@@ -2382,14 +3074,142 @@ const Fig4 = () => {
     ? stepLabels[Math.min(step, stepLabels.length - 1)]
     : 'q = [10, 20]  ·  click para pausar / reanudar';
 
+  if (isCompact) {
+    const rows = [[0], [1, 2], [3, 4, 5, 6]];
+    const compactLegend = [
+      ['visitado', '#dbe4ff', '#1e3a8a'],
+      ['hit', '#d3f9d8', '#15803d'],
+      ['podado', '#ffe3e3', '#991b1b'],
+    ];
+
+    return React.createElement('div',
+      getFigureToggleProps(paused, setPaused, 'Figura interactiva de consulta con poda en árbol aumentado'),
+      React.createElement('div', {
+        style: {
+          fontSize: '0.68rem',
+          fontFamily: 'JetBrains Mono, monospace',
+          color: '#1f1f1c',
+          marginBottom: '0.75rem',
+          background: '#f5f4ee',
+          padding: '0.55rem 0.8rem',
+          borderLeft: '3px solid #0a0a0a',
+          lineHeight: 1.45
+        }
+      }, descText),
+      React.createElement('div', {
+        style: {
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '0.4rem',
+          marginBottom: '0.75rem'
+        }
+      },
+        React.createElement('span', {
+          style: {
+            padding: '0.25rem 0.5rem',
+            background: '#dbe4ff',
+            color: '#1e3a8a',
+            fontSize: '0.62rem',
+            fontWeight: '700'
+          }
+        }, 'q = [10, 20]'),
+        ...compactLegend.map(([label, fill, stroke]) =>
+          React.createElement('span', {
+            key: label,
+            style: {
+              padding: '0.25rem 0.5rem',
+              background: fill,
+              color: stroke,
+              fontSize: '0.58rem',
+              border: `1px solid ${stroke}`
+            }
+          }, label)
+        )
+      ),
+      ...rows.map((row, rowIdx) =>
+        React.createElement('div', {
+          key: `row-${rowIdx}`,
+          style: {
+            display: 'grid',
+            gridTemplateColumns: `repeat(${row.length}, minmax(0, 1fr))`,
+            gap: '0.45rem',
+            marginBottom: '0.45rem'
+          }
+        },
+          ...row.map((id) => {
+            const node = nodes[id];
+            const st = nodeState(id);
+            const { fill, stroke, tc } = S[st];
+            return React.createElement('div', {
+              key: id,
+              style: {
+                background: fill,
+                border: `1px solid ${stroke}`,
+                padding: '0.55rem 0.45rem',
+                minHeight: '58px',
+                textAlign: 'center'
+              }
+            },
+              React.createElement('div', {
+                style: { fontSize: '0.7rem', color: tc, fontWeight: '700', marginBottom: '0.18rem' }
+              }, `[${node.iv[0]}, ${node.iv[1]}]`),
+              React.createElement('div', {
+                style: { fontSize: '0.56rem', color: '#4a4a45', marginBottom: '0.18rem' }
+              }, `m(v) = ${node.m}`),
+              React.createElement('div', {
+                style: {
+                  fontSize: '0.52rem',
+                  color: tc,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase'
+                }
+              }, st === 'idle' ? 'pendiente' : st)
+            );
+          })
+        )
+      ),
+      React.createElement('div', {
+        style: {
+          marginTop: '0.85rem',
+          padding: '0.75rem 0.8rem',
+          border: '1px solid #ebeae3',
+          background: '#fafaf7'
+        }
+      },
+        React.createElement('div', {
+          style: {
+            fontSize: '0.56rem',
+            color: '#8a8a82',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            marginBottom: '0.45rem'
+          }
+        }, 'Orden de visita'),
+        React.createElement('div', {
+          style: { display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }
+        },
+          ...visitSeq.map((id, index) => {
+            const activeStep = step >= index;
+            const node = nodes[id];
+            return React.createElement('span', {
+              key: `${id}-${index}`,
+              style: {
+                padding: '0.22rem 0.45rem',
+                background: activeStep ? '#0a0a0a' : '#ebeae3',
+                color: activeStep ? 'white' : '#4a4a45',
+                fontSize: '0.58rem'
+              }
+            }, `${index + 1}. [${node.iv[0]},${node.iv[1]}]`);
+          })
+        )
+      )
+    );
+  }
+
   return React.createElement('div',
-    {
-      style: { cursor: 'pointer', userSelect: 'none' },
-      onClick: () => setPaused(p => !p),
-      title: 'Click para pausar / reanudar',
-    },
+    getFigureToggleProps(paused, setPaused, 'Figura interactiva de consulta con poda en árbol aumentado'),
     React.createElement('svg',
-      { width: '100%', viewBox: `0 0 ${W} ${SVGH}`, style: { fontFamily: 'JetBrains Mono, monospace', overflow: 'visible' } },
+      { width: isCompact ? W : '100%', viewBox: `0 0 ${W} ${SVGH}`, style: { fontFamily: 'JetBrains Mono, monospace', overflow: 'visible' } },
 
       // ── Section header: number line ─────────────────────────────────────
       React.createElement('text', {
@@ -2577,6 +3397,7 @@ const Fig4 = () => {
 // sub-consulta en su árbol TP interior. Coste: O(log²n + k).
 
 const Fig5 = () => {
+  const isCompact = useCompactFigure();
   const [step, setStep] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -2679,8 +3500,153 @@ const Fig5 = () => {
       stroke: '#a3e9a4', strokeWidth: '1.2'
     });
 
+  if (isCompact) {
+    const rows = [[0], [1, 2], [3, 4, 5, 6]];
+    const renderBWNodeCard = (id) => {
+      const node = bwNodes.find((item) => item.id === id);
+      const active = bwActive.includes(id);
+      return React.createElement('div', {
+        key: id,
+        style: {
+          background: active ? '#dbe4ff' : '#fafaf7',
+          border: `1px solid ${active ? '#1e3a8a' : '#d8d8d0'}`,
+          padding: '0.5rem 0.35rem',
+          textAlign: 'center',
+          fontSize: '0.58rem',
+          color: active ? '#1e3a8a' : '#1f1f1c',
+          fontWeight: active ? '700' : '500'
+        }
+      }, node.lbl);
+    };
+
+    const renderTPBlock = (title, nodesList, activeBlock) =>
+      React.createElement('div', {
+        style: {
+          border: `1px solid ${activeBlock ? '#15803d' : '#d8d8d0'}`,
+          background: activeBlock ? '#eefbf0' : '#fafaf7',
+          padding: '0.7rem'
+        }
+      },
+        React.createElement('div', {
+          style: {
+            fontSize: '0.58rem',
+            color: activeBlock ? '#15803d' : '#8a8a82',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            marginBottom: '0.5rem',
+            fontWeight: '700'
+          }
+        }, title),
+        React.createElement('div', {
+          style: {
+            display: 'grid',
+            gridTemplateColumns: '1fr',
+            gap: '0.38rem',
+            justifyItems: 'center'
+          }
+        },
+          React.createElement('div', {
+            style: {
+              minWidth: '110px',
+              padding: '0.38rem 0.55rem',
+              background: '#d3f9d8',
+              border: '1px solid #15803d',
+              textAlign: 'center',
+              fontSize: '0.58rem',
+              color: '#15803d',
+              fontWeight: '700'
+            }
+          }, nodesList[0].lbl),
+          React.createElement('div', {
+            style: {
+              width: '100%',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '0.38rem'
+            }
+          },
+            ...nodesList.slice(1).map((node) =>
+              React.createElement('div', {
+                key: node.lbl,
+                style: {
+                  padding: '0.38rem 0.3rem',
+                  background: '#d3f9d8',
+                  border: '1px solid #15803d',
+                  textAlign: 'center',
+                  fontSize: '0.56rem',
+                  color: '#15803d',
+                  fontWeight: '700'
+                }
+              }, node.lbl)
+            )
+          )
+        )
+      );
+
+    return React.createElement('div',
+      getFigureToggleProps(paused, setPaused, 'Figura interactiva de consulta bidimensional anidada'),
+      React.createElement('div', {
+        style: {
+          fontSize: '0.68rem',
+          fontFamily: 'JetBrains Mono, monospace',
+          color: '#1f1f1c',
+          marginBottom: '0.75rem',
+          background: '#f5f4ee',
+          padding: '0.55rem 0.8rem',
+          borderLeft: '3px solid #0a0a0a',
+          lineHeight: 1.45
+        }
+      }, phases[step].desc),
+      React.createElement('div', {
+        style: {
+          fontSize: '0.58rem',
+          color: '#1e3a8a',
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          marginBottom: '0.5rem',
+          fontWeight: '700'
+        }
+      }, 'Árbol BW · exterior'),
+      ...rows.map((row, rowIdx) =>
+        React.createElement('div', {
+          key: `bw-row-${rowIdx}`,
+          style: {
+            display: 'grid',
+            gridTemplateColumns: `repeat(${row.length}, minmax(0, 1fr))`,
+            gap: '0.42rem',
+            marginBottom: '0.42rem'
+          }
+        }, ...row.map(renderBWNodeCard))
+      ),
+      React.createElement('div', {
+        style: {
+          display: 'grid',
+          gridTemplateColumns: '1fr',
+          gap: '0.75rem',
+          marginTop: '0.85rem'
+        }
+      },
+        renderTPBlock('Candidato BW [4–7] · árbol TP', tp1Nodes, hl === 'tp1' || hl === 'done'),
+        renderTPBlock('Candidato BW [8–11] · árbol TP', tp2Nodes, hl === 'tp2' || hl === 'done')
+      ),
+      React.createElement('div', {
+        style: {
+          marginTop: '0.8rem',
+          padding: '0.7rem 0.8rem',
+          background: hl === 'done' ? '#0a0a0a' : '#fafaf7',
+          color: hl === 'done' ? 'white' : '#1f1f1c',
+          border: hl === 'done' ? 'none' : '1px solid #ebeae3',
+          fontSize: '0.64rem',
+          lineHeight: 1.45
+        }
+      }, hl === 'done'
+        ? 'Unión final de candidatos confirmados en TP: la consulta compuesta queda en O(log²n + k).'
+        : 'En móvil, la figura mantiene los dos niveles del índice: primero BW, después validación local en TP.')
+    );
+  }
+
   return React.createElement('div',
-    { onClick: () => setPaused(p => !p), style: { cursor: 'pointer', userSelect: 'none' }, title: 'Click para pausar / reanudar' },
+    getFigureToggleProps(paused, setPaused, 'Figura interactiva de consulta bidimensional anidada'),
 
     React.createElement('div', {
       style: {
@@ -2692,7 +3658,7 @@ const Fig5 = () => {
     }, phases[step].desc),
 
     React.createElement('svg',
-      { width: '100%', viewBox: `0 0 ${W} ${H}`, style: { fontFamily: 'JetBrains Mono, monospace', overflow: 'visible' } },
+      { width: isCompact ? W : '100%', viewBox: `0 0 ${W} ${H}`, style: { fontFamily: 'JetBrains Mono, monospace', overflow: 'visible' } },
 
       // BW label
       React.createElement('text', {
@@ -2813,11 +3779,14 @@ const Fig5 = () => {
 // en espacio y tiempo del Árbol de Intervalos 2D vs. el modelo naive.
 
 const Fig6 = () => {
+  const isCompact = useCompactFigure();
   const [ref, visible] = useInView(0.2);
   const [go, setGo] = useState(false);
 
   useEffect(() => {
-    if (visible) setTimeout(() => setGo(true), 200);
+    if (!visible) return;
+    const timeoutId = setTimeout(() => setGo(true), 200);
+    return () => clearTimeout(timeoutId);
   }, [visible]);
 
   const rows = [
@@ -2869,7 +3838,7 @@ const Fig6 = () => {
 
     // Stat row: RAM comparison
     React.createElement('div', {
-      style: { marginTop: '1.2rem', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.7rem' }
+      style: { marginTop: '1.2rem', display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 1fr 1fr', gap: '0.7rem' }
     },
       [
         { lbl: 'RAM · Naive',         v: '~9.8 GB', c: '#991b1b' },
@@ -2909,11 +3878,14 @@ const Fig6 = () => {
 // Comparación visual del consumo de RAM entre los dos modelos.
 
 const Fig7 = () => {
+  const isCompact = useCompactFigure();
   const [ref, visible] = useInView(0.2);
   const [go, setGo] = useState(false);
 
   useEffect(() => {
-    if (visible) setTimeout(() => setGo(true), 400);
+    if (!visible) return;
+    const timeoutId = setTimeout(() => setGo(true), 400);
+    return () => clearTimeout(timeoutId);
   }, [visible]);
 
   const TANK_H = 160;
@@ -2928,7 +3900,7 @@ const Fig7 = () => {
 
       React.createElement('div', {
         style: {
-          width: '90px', height: `${TANK_H}px`,
+          width: isCompact ? '108px' : '90px', height: `${TANK_H}px`,
           border: `2.5px solid ${color}`,
           borderRadius: '4px',
           position: 'relative',
@@ -2996,14 +3968,16 @@ const Fig7 = () => {
     );
 
   return React.createElement('div', { ref },
-        }
-      }, time)
-    );
-
-  return React.createElement('div', { ref },
 
     React.createElement('div', {
-      style: { display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '3.5rem', padding: '0.5rem 0 0.85rem' }
+      style: {
+        display: 'flex',
+        flexDirection: isCompact ? 'column' : 'row',
+        alignItems: isCompact ? 'center' : 'flex-end',
+        justifyContent: 'center',
+        gap: isCompact ? '1rem' : '3.5rem',
+        padding: '0.5rem 0 0.85rem'
+      }
     },
       React.createElement(Tank, {
         label: 'Naive', model: 'O(n · d₁ · d₂)',
@@ -3013,9 +3987,9 @@ const Fig7 = () => {
       React.createElement('div', {
         style: {
           fontFamily: 'JetBrains Mono, monospace',
-          fontSize: '1.4rem', fontWeight: '900',
+          fontSize: isCompact ? '0.85rem' : '1.4rem', fontWeight: '900',
           color: '#d8d8d0', alignSelf: 'center',
-          paddingBottom: `${TANK_H * 0.32}px`
+          paddingBottom: isCompact ? '0' : `${TANK_H * 0.32}px`
         }
       }, 'vs'),
 
@@ -3050,8 +4024,10 @@ const Fig7 = () => {
 // de los dos solapes 1D. Estático y denso en información.
 
 const FigDecompose = () => {
-  const W = 480, H = 310;
-  const pad = { l: 78, b: 72, r: 26, t: 26 };
+  const isCompact = useCompactFigure();
+  const W = isCompact ? 368 : 480;
+  const H = isCompact ? 292 : 310;
+  const pad = isCompact ? { l: 58, b: 64, r: 18, t: 24 } : { l: 78, b: 72, r: 26, t: 26 };
   const iW = W - pad.l - pad.r;
   const iH = H - pad.t - pad.b;
   const Dx = 24, Dy = 24;
@@ -3250,6 +4226,7 @@ const FigDecompose = () => {
 // Cada ruta termina en un estado del reporte.
 
 const FigStates = () => {
+  const isCompact = useCompactFigure();
   const W = 720, H = 400;
 
   // Columnas
@@ -3306,10 +4283,109 @@ const FigStates = () => {
     { y: 310, t: 'AUSENCIA_TOTAL_OFERTA',    sub: 'ninguna fecha del registro aparece en destino',         c: '#991b1b', soft: '#ffe3e3' },
   ];
 
+  if (isCompact) {
+    const routes = [
+      { state: STATES[0], path: ['src ✓ · dst ✓', 'δ_src = δ_dst', '#src = #dst = 1'] },
+      { state: STATES[1], path: ['src ✓ · dst ✓', 'δ_src ≠ δ_dst'] },
+      { state: STATES[2], path: ['src ✓ · dst ✓', '#src > 1 ∨ #dst > 1'] },
+      { state: STATES[3], path: ['src ✗ · dst ✓'] },
+      { state: STATES[4], path: ['src ✓ · dst ✗', '_completely_missing = 0'] },
+      { state: STATES[5], path: ['src ✓ · dst ✗', 'bw_l > tp_h'] },
+      { state: STATES[6], path: ['src ✓ · dst ✗', '_completely_missing > 0'] },
+    ];
+
+    return React.createElement('div', {
+      style: { fontFamily: 'JetBrains Mono, monospace' }
+    },
+      React.createElement('div', {
+        style: {
+          fontSize: '0.6rem',
+          color: '#8a8a82',
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          marginBottom: '0.75rem',
+          fontWeight: '700'
+        }
+      }, 'Evaluación por fila · rutas exclusivas'),
+      React.createElement('div', {
+        style: { display: 'grid', gap: '0.7rem' }
+      },
+        ...routes.map(({ state, path }) =>
+          React.createElement('div', {
+            key: state.t,
+            style: {
+              border: `1px solid ${state.c}`,
+              background: state.soft,
+              padding: '0.8rem'
+            }
+          },
+            React.createElement('div', {
+              style: {
+                fontSize: '0.72rem',
+                color: state.c,
+                fontWeight: '900',
+                marginBottom: '0.45rem'
+              }
+            }, state.t),
+            React.createElement('div', {
+              style: {
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '0.35rem',
+                marginBottom: '0.45rem'
+              }
+            },
+              ...path.map((stepLabel, index) =>
+                React.createElement(React.Fragment, { key: `${state.t}-${index}` },
+                  React.createElement('span', {
+                    style: {
+                      padding: '0.24rem 0.45rem',
+                      background: 'white',
+                      border: '1px solid rgba(0,0,0,0.08)',
+                      fontSize: '0.56rem',
+                      color: '#1f1f1c'
+                    }
+                  }, stepLabel),
+                  index < path.length - 1 && React.createElement('span', {
+                    style: {
+                      alignSelf: 'center',
+                      fontSize: '0.62rem',
+                      color: '#8a8a82'
+                    }
+                  }, '→')
+                )
+              )
+            ),
+            React.createElement('div', {
+              style: {
+                fontFamily: 'EB Garamond, serif',
+                fontStyle: 'italic',
+                fontSize: '0.84rem',
+                lineHeight: 1.4,
+                color: '#4a4a45'
+              }
+            }, state.sub)
+          )
+        )
+      ),
+      React.createElement('div', {
+        style: {
+          marginTop: '0.8rem',
+          padding: '0.7rem 0.8rem',
+          background: '#f5f4ee',
+          border: '1px solid #ebeae3',
+          fontSize: '0.64rem',
+          lineHeight: 1.45,
+          color: '#1f1f1c'
+        }
+      }, 'Orden de evaluación first-match: cada fila cae en exactamente un estado. La composición móvil conserva todas las rutas lógicas del árbol original.')
+    );
+  }
+
   const svgH = 360;
 
   return React.createElement('svg', {
-    width: '100%', viewBox: `0 0 ${W} ${svgH}`,
+    width: isCompact ? W : '100%', viewBox: `0 0 ${W} ${svgH}`,
     style: { overflow: 'visible', fontFamily: 'JetBrains Mono, monospace' }
   },
     // Header
@@ -3385,20 +4461,24 @@ const h = React.createElement;
 (() => {
   const update = () => {
     const el = document.documentElement;
-    const pct = (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100;
+    const maxScroll = el.scrollHeight - el.clientHeight;
+    const pct = maxScroll > 0 ? (el.scrollTop / maxScroll) * 100 : 0;
     const f = document.getElementById('pfill');
     if (f) f.style.width = `${pct}%`;
   };
   window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  update();
 })();
 
 // ── Components ──────────────────────────────────────────────────────────
 const Sec = ({ id, n, title, children }) => {
   const [ref, visible] = useInView(0.08);
-  return h('section', { id, ref, className: `sec${visible ? ' vis' : ''}` },
+  const titleId = `${id}-title`;
+  return h('section', { id, ref, className: `sec${visible ? ' vis' : ''}`, 'aria-labelledby': titleId },
     h('div', { className: 'sec-head' },
       h('span', { className: 'sec-num' }, n),
-      h('h2', { className: 'sec-title' }, title)
+      h('h2', { className: 'sec-title', id: titleId }, title)
     ),
     h('div', { className: 'sec-body' }, children)
   );
@@ -3486,7 +4566,7 @@ const App = () =>
       h('div', { className: 'topbar-right' }, 'V 3.1  ·  17.04.2026')
     ),
 
-    h('article', { className: 'paper' },
+    h('main', { className: 'paper', id: 'content', tabIndex: -1 },
 
       // Hero
       h('header', { className: 'hero' },
@@ -3519,8 +4599,8 @@ const App = () =>
       ),
 
       // Abstract
-      h('div', { className: 'abstract' },
-        h('div', { className: 'abstract-label' }, '— Resumen'),
+      h('section', { className: 'abstract', 'aria-labelledby': 'abstract-title' },
+        h('h2', { className: 'abstract-label', id: 'abstract-title' }, 'Resumen'),
         h('p', { className: 'abstract-body' },
           h('strong', null, 'Problema. '),
           'La conciliación periódica entre las ofertas gestionadas por nuestro sistema interno (',
